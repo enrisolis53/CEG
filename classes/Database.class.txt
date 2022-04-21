@@ -1,0 +1,153 @@
+<?php
+
+namespace classes;
+
+class Database
+{
+
+	private $host = 'localhost';
+	private $user = '';
+	private $pass = '';
+	private $dbname = '';
+
+	public $dbh;
+	public $error;
+	public $stmt;
+	public $arr = array();
+
+	public function __construct($host = NULL, $user = NULL, $pass = NULL, $dbname = NULL)
+	{
+		// Set DSN
+		if ($host == NULL) {
+			$this->host = $this->host;
+		} else {
+			$this->host = $host;
+		}
+
+		if ($user == NULL) {
+			$this->user = $this->user;
+		} else {
+			$this->user = $user;
+		}
+
+		if ($pass == NULL) {
+			$this->pass = $this->pass;
+		} else {
+			$this->pass = $pass;
+		}
+
+		if ($dbname == NULL) {
+			$this->dbname = $this->dbname;
+		} else {
+			$this->dbname = $dbname;
+		}
+
+
+		$dsn = 'sqlsrv:server=' . $this->host . ';Database=' . $this->dbname;
+		// Set Options
+		$options = array(
+			\PDO::SQLSRV_ATTR_DIRECT_QUERY => true,
+			\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+		);
+
+		// Create new PDO
+		try {
+			$this->dbh = new \PDO($dsn, $this->user, $this->pass, $options);
+		} catch (\PDOException $e) {
+			$this->error = $e->getMessage();
+		}
+	}
+
+	public function initFont()
+	{
+		echo "<style>*{font-family:'Calibri'}</style>";
+	}
+
+	public function connectionStatus()
+	{
+		$this->initFont();
+		if ($this->dbh) {
+			echo "<strong style='color:#8bc34a'>Connected to " . $this->host . " => " . $this->dbname . ".<br></strong>";
+		} else {
+
+			exit("<strong style='color:palevioletred'>Connection Failed:</strong> " . $this->error);
+		}
+	}
+
+	public function query($query)
+	{
+		$this->stmt = $this->dbh->prepare($query);
+	}
+
+	// public function setDBName($new_db){
+	// 	return $this->dbname=$new_db;
+	// }
+	public function getDBName()
+	{
+		return $this->dbname;
+	}
+
+	public function bind($param, $value, $type = null)
+	{
+		if (is_null($type)) {
+
+			switch (true) {
+
+				case is_int($value):
+					$type = \PDO::PARAM_INT;
+					break;
+
+				case is_bool($value):
+					$type = \PDO::PARAM_BOOL;
+					break;
+
+				case is_null($value):
+					$type = \PDO::PARAM_NULL;
+					break;
+				default:
+					$type = \PDO::PARAM_STR;
+			}
+		}
+
+		$this->stmt->bindValue($param, $value, $type);
+	}
+
+	public function execute($arr)
+	{
+		return $this->stmt->execute($arr);
+	}
+
+	public function lastInsertID()
+	{
+		$this->dbh->lastInsertId();
+	}
+
+
+	public function resultset()
+	{
+
+		return $this->stmt->fetchAll(\PDO::FETCH_OBJ);
+	}
+	public function result()
+	{
+
+		return $this->stmt->fetchColumn();
+		// returns the query value
+		// echo $result;
+	}
+
+
+	public function getrow()
+	{
+
+		return $this->stmt->fetchAll(\PDO::FETCH_BOTH);
+		// $result[0]['name']
+	}
+
+	public function getrows()
+	{
+
+		return $this->stmt->fetchAll(\PDO::FETCH_NAMED);
+		// returns single row query value
+	}
+}
