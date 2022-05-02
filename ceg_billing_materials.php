@@ -15,6 +15,10 @@ $rslstbranchname = $DB->resultset();
 $DB->query('SELECT DISTINCT proj_id, proj_name FROM tbl_proj_profile ORDER BY proj_name');
 $DB->execute([]);
 $rslstprojectname = $DB->resultset();
+
+$DB->query('SELECT itemcode, descrip, buum, brum FROM lib_items ORDER BY descrip');
+$DB->execute([]);
+$rslstitems = $DB->resultset();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -135,15 +139,11 @@ $rslstprojectname = $DB->resultset();
                                                                 <thead class="bg-light text-secondary">
                                                                     <tr>
                                                                         <th><button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#materialsModal"><i class="fa fa-plus"></i></button></th>
-                                                                        <th class="text-center">Item Desciption</th>
                                                                         <th class="text-center">Item Code</th>
+                                                                        <th class="text-center">Item Desciption</th>
                                                                         <th class="text-center">Units</th>
                                                                         <th class="text-center">Quantity</th>
-                                                                        <th class="text-center">Unit Cost</th>
-                                                                        <th class="text-center">Total Cost</th>
-                                                                        <th class="text-center">On Hand</th>
-                                                                        <th class="text-center">On Order</th>
-                                                                        <th class="text-center">Notes</th>
+                                                                        <!-- <th class="text-center">Notes</th> -->
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody id="listofitem">
@@ -202,7 +202,7 @@ $rslstprojectname = $DB->resultset();
 
     <!-- Modal Materials -->
     <div class="modal fade" id="materialsModal" tabindex="-1" role="dialog" aria-labelledby="materialsModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg modal-frame" role="document" style="width: 700px; overflow-y: auto">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="materialsModalTitle">MATERIALS ENTRY</h5>
@@ -212,23 +212,22 @@ $rslstprojectname = $DB->resultset();
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-lg-9">
+                        <div class="col-lg-12">
                             <div class="form-label-group">
-                                <label for="itemdescription">Item Description</label>
-                                <select name="itemdescription" id="itemdescription" class="form-control" autofocus>
-                                    <option value="">--</option>
-                                </select>
+                                <label for="itemdescrip">Item Description</label>
+                                <input list="lstitems" class="form-control" id="itemdescrip" name="itemdescrip" value="" autofocus />
+                                <datalist id="lstitems"></datalist>
                             </div>
-                        </div>
-                        <div class="col-lg-3">
-                            <div class="form-label-group">
-                                <label id="itemcode" for="docnumber">Item Code</label>
-                                <input type="text" class="form-control" id="itemcode" name="itemcode" value="" readonly tabindex="-1"/>
-                            </div>                
-                        </div>                                
+                        </div>                              
                     </div>
 
                     <div class="row">
+                        <div class="col-lg-3 mt-3">
+                            <div class="form-label-group">
+                                <label for="itemcode">Item Code</label>
+                                <input type="text" class="form-control" id="itemcode" name="itemcode" value="" readonly tabindex="-1"/>
+                            </div>                
+                        </div>    
                         <div class="col-lg-3 mt-3">
                             <div class="form-label-group">
                                 <label for="units">Units</label>
@@ -239,50 +238,16 @@ $rslstprojectname = $DB->resultset();
                         </div>
                         <div class="col-lg-3 mt-3">
                             <div class="form-label-group">
-                                <label for="onhand">On Hand</label>
-                                <input type="number" class="form-control" id="onhand" name="onhand" value="" readonly tabindex="-1"/>
-                            </div>
-                        </div> 
-                        <div class="col-lg-3 mt-3">
-                            <div class="form-label-group">
-                                <label for="onorder">On Order</label>
-                                <input type="number" class="form-control" id="onorder" name="onorder" value="" readonly tabindex="-1"/>
-                            </div>
-                        </div>  
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-3 mt-3">
-                            <div class="form-label-group">
                                 <label for="quantity">Quantity</label>
-                                <input type="text" class="form-control" id="quantity" name="quantity" value=""/>
-                            </div>
-                        </div>                                            
-                        <div class="col-lg-3 mt-3">
-                            <div class="form-label-group">
-                                <label for="unitcost">Unit Cost</label>
-                                <input type="number" class="form-control" id="unitcost" name="unitcost" value=""/>
-                            </div>
-                        </div> 
-                        <div class="col-lg-3 mt-3">
-                            <div class="form-label-group">
-                                <label for="totalcost">Tota Cost</label>
-                                <input type="number" class="form-control" id="totalcost" name="totalcost" value="" readonly tabindex="-1"/>
+                                <input type="number" class="form-control" id="quantity" name="quantity" value=""/>
                             </div>
                         </div>  
-                    </div>
-
-                    <div class="row">                                  
-                        <div class="col-lg-9 mt-3">
+                        <!-- <div class="col-lg-9 mt-3">
                             <div class="form-label-group">
                                 <label for="notes">Notes</label>
                                 <input type="text" class="form-control" id="notes" name="notes" value="" />
                             </div>
-                        </div>
-                        <div class="col-lg-3 mt-3">
-                            <label>&nbsp;</label>
-                            <div id='mytable'>&nbsp;</div>  
-                        </div>  
+                        </div>  -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -294,15 +259,19 @@ $rslstprojectname = $DB->resultset();
 
     <?php include('menu-end.php'); ?>
 
-    <datalist id="lstprojname1">
+    <datalist id="lstprojname1"></datalist>
+
+    <datalist id="lstitems1">
     <?php
-    foreach ($rslstprojectname as $row){
-        $xproj_id = trim($row->proj_id);
-        $xproj_name = strtoupper(trim($row->proj_name));
-        echo "<option value='$xproj_name' label='$xproj_id'></option>";
+    foreach ($rslstitems as $row){
+        $xitemcode = trim($row->itemcode);
+        $xdescrip = trim($row->descrip);
+        $xunit = trim($row->buum)." ^ ".trim($row->brum);
+        echo "<option value='$xdescrip' label='$xitemcode' unit='$xunit'></option>";
     }
     ?>
     </datalist>
+    
 
     <!-- JS -->
     <script src="vendor/jquery/jquery.min.js"></script>
@@ -314,7 +283,7 @@ $rslstprojectname = $DB->resultset();
     <script type='text/javascript'>
     $(function() {
 
-        $("#branchname").change(function(e) {
+        $("#branchname").blur(function(e) {
             clearform();
             $("#brcode").val(""); 	
             var thisval = ($(this).val()).toUpperCase();
@@ -324,6 +293,29 @@ $rslstprojectname = $DB->resultset();
                 var optlbl = $(this).attr("label");
                 if (optval==thisval) { 
                     $("#brcode").val(optlbl); 
+
+                    $.post("ceg_ajax.php", {
+                        "brcode": optlbl,
+                        "proj_id": "",
+                        "trans": "getprojectnamelist" 
+                        }, function (str) {
+                        //-- load data to list
+                        if (str.length > 0) {
+                            let arrdetails = JSON.parse(str);
+                            let proj_id = "";
+                            let proj_name = "";
+                            let options = "";
+
+                            for (let ix = 0; ix < arrdetails.length; ix++) {                            
+                                proj_id = arrdetails[ix]["proj_id"];
+                                proj_name = arrdetails[ix]["proj_name"];
+
+                                options += '<option value="' + proj_name + '" label="' + proj_id + '"></option>';
+                            }
+
+                            document.getElementById('lstprojname1').innerHTML = options;
+                        }
+                    });
                 }
             });            
         });
@@ -363,7 +355,63 @@ $rslstprojectname = $DB->resultset();
             });            
         });
 
+        $("#itemdescrip").keyup(function(e) {;
+            var discnt = 0;
+            var disval = $(this).val().toUpperCase();
+            var dislen = disval.length;
+            $('#lstitems').html('');
+            $('#lstitems1 option').each(function (i, e) {
+                var optval = $(this).val().toUpperCase().substr(0, dislen);
+                if (disval == optval) {
+                    if (discnt == 10) {
+                        Debug.Break();
+                    }
+                    $('#lstitems').append('<option value=\"' + $(this).val() + '\" label=\"' + $(this).attr('label') + '\" unit=\"' + $(this).attr('unit') + '\">');
+                    discnt++;
+                }
+            });
+        });
+
+        $("#itemdescrip").blur(function(e) {
+            var thisval = ($(this).val()).toUpperCase();
+            $("#itemcode").val("");
+            $("#units").val("");
+
+            $('#lstitems option').each(function(i,e) {
+                var optval = ($(this).val()).toUpperCase();
+                var optlbl = $(this).attr("label");
+                var optunit = ($(this).attr("unit")).toUpperCase();
+                if (optval==thisval) { 
+                    $("#itemdescrip").val(optval);
+                    $("#itemcode").val(optlbl);
+                    loadunits(optunit);
+                }
+            });            
+        });
+
     });
+
+    function loadunits(str){
+        document.getElementById('units').innerHTML = '';
+        var list = document.getElementById('units');
+        
+        if (str.length>0) {
+            var arritem = str.split("^");
+            for (var ix=0; ix<arritem.length; ix++) {
+                if (arritem[ix]!="") {
+                    var xunit = arritem[ix];                   
+                    var option = document.createElement('option');
+                    option.value = xunit;
+                    option.label = xunit;
+                    list.appendChild(option);
+
+                    // $(".list").each(function() {
+                    //     alert($(this).val());
+                    // }
+                }                
+            }
+        }
+    }
     </script>
 
 </body>
