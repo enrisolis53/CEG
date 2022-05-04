@@ -56,6 +56,7 @@ $rslstitems = $DB->resultset();
                     <div class="card-body">
 
                         <form name="disform" id="disform" method="POST">
+                        <input type="hidden" id="transdata" name="transdata" value="" />
                             
                             <div class="row">
 
@@ -266,7 +267,7 @@ $rslstitems = $DB->resultset();
     foreach ($rslstitems as $row){
         $xitemcode = trim($row->itemcode);
         $xdescrip = trim($row->descrip);
-        $xunit = trim($row->buum)." ^ ".trim($row->brum);
+        $xunit = trim($row->buum)."^".trim($row->brum);
         echo "<option value='$xdescrip' label='$xitemcode' unit='$xunit'></option>";
     }
     ?>
@@ -278,7 +279,7 @@ $rslstitems = $DB->resultset();
     <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
     <script src="vendor/jquery/jquery-confirm.js"></script>
     <script src="vendor/datepicker/dpicker.js"></script>
-    <script text="text/javascript" src="main/js/ceg_createproject.js"></script>
+    <script text="text/javascript" src="main/js/ceg_billing_materials.js"></script>
     <script text="text/javascript" src="main/js/menu.js"></script>
     <script type='text/javascript'>
     $(function() {
@@ -313,6 +314,7 @@ $rslstitems = $DB->resultset();
                                 options += '<option value="' + proj_name + '" label="' + proj_id + '"></option>';
                             }
 
+                            document.getElementById('lstprojname').innerHTML = options;
                             document.getElementById('lstprojname1').innerHTML = options;
                         }
                     });
@@ -403,11 +405,11 @@ $rslstitems = $DB->resultset();
                     var option = document.createElement('option');
                     option.value = xunit;
                     option.label = xunit;
-                    list.appendChild(option);
 
-                    // $(".list").each(function() {
-                    //     alert($(this).val());
-                    // }
+                    $(list).each(function() {
+                        var selection = $(this).val();
+                        if(selection!=xunit) list.appendChild(option);
+                    });
                 }                
             }
         }

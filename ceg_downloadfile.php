@@ -230,6 +230,7 @@ $rslstbranchname = $DB->resultset();
                                 options += '<option value="' + proj_name + '" label="' + proj_id + '"></option>';
                             }
 
+                            document.getElementById('lstprojname').innerHTML = options;
                             document.getElementById('lstprojname1').innerHTML = options;
                         }
                     });
