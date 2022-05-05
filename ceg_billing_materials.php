@@ -5,6 +5,7 @@ include('classes/Database.class.php');
 
 $empid = $_SESSION['ceg_empid'];
 $brcode = $_SESSION["ceg_brcode"];
+$position = $_SESSION['positn'];
 
 $DB = new classes\Database;
 
@@ -170,6 +171,7 @@ $rslstitems = $DB->resultset();
                                                     <div class="form-label-group">
                                                         <label for="prepby">Prepared By</label>
                                                         <input list="lstprep" class="form-control req" id="prepby" name="prepby" value="<?php echo $username; ?>" />
+                                                        <input type="hidden" id="prepbypos" name="prepbypos" value="<?php echo $position; ?>" />
                                                         <datalist id="lstprep">
                                                             <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
                                                         </datalist>
