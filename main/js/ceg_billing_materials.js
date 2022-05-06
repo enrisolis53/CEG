@@ -169,3 +169,26 @@ function validate() {
         }
     });
 }
+
+function reprint() {
+    let brcode = $("#brcode").val();
+    let transno = $("#transno").val();
+
+    if (transno.length <= 0) {
+        $.alert({
+            title: 'No Transaction  Number',
+            icon: 'fa fa-exclamation-triangle',
+            content: 'Please enter Transaction number and try again!',
+            type: 'red',
+            theme: "modern",
+            typeAnimated: true,
+            buttons: {
+                close: function () {}
+            }
+        });
+        return;
+    }
+    $("#transno").val("");
+    clearform();
+    window.open("ceg_billing_materials_print.php?brcode=" + brcode + "&transno=" + transno, "BILLING MATERIALS PDF", "height=500, width=800, left=10, top=10");
+}
