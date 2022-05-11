@@ -4,14 +4,18 @@ ini_set('display_errors', 1);
 include('classes/Database.class.php');
 
 $empid = $_SESSION['ceg_empid'];
-$brcode = $_SESSION["ceg_brcode"];
+$mybrcode = $_SESSION["ceg_brcode"];
 $position = $_SESSION['positn'];
+$brcode = $_GET["brcode"];
+$transno = $_GET["transno"];
 
 $DB = new classes\Database;
 
-$DB->query('SELECT DISTINCT brcode, brloc, getdate() AS today FROM lib_access_accounts WHERE empid=? ORDER BY brloc'); 
-$DB->execute([$empid]);
-$rslstbranchname = $DB->resultset();
+$DB->query('SELECT TOP (1) brcode, brloc, getdate() AS today FROM lib_access_accounts WHERE brcode=?'); 
+$DB->execute([$brcode]);
+$rs = $DB->getrow();
+$brloc = utf8_decode(strtoupper(trim($rs[0]["brloc"])));
+$today = $rs[0]["today"];
 
 $DB->query('SELECT DISTINCT proj_id, proj_name FROM tbl_proj_profile ORDER BY proj_name');
 $DB->execute([]);
@@ -64,23 +68,13 @@ $rslstitems = $DB->resultset();
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="branch">Branch Name</label>
-                                        <input list="lstbranchname" class="form-control req" id="branchname" name="branchname" value="" />
-                                        <datalist id="lstbranchname">
-                                        <?php
-                                        foreach ($rslstbranchname as $row){
-                                            $xbrcode = trim($row->brcode);
-                                            $xbrloc = trim($row->brloc);
-                                            echo "<option value='$xbrloc' label='$xbrcode'></option>";
-                                            $today = date("Y-m-d", strtotime($row->today));
-                                        }
-                                        ?>
-                                        </datalist>
+                                        <input list="lstbranchname" class="form-control req" id="branchname" name="branchname" value="<?php echo $brloc; ?>" readonly />
                                     </div>
                                 </div> 
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transno">Branch Code</label>
-                                        <input type="text" class="form-control req" id="brcode" name="brcode" value="" readonly />
+                                        <input type="text" class="form-control req" id="brcode" name="brcode" value="<?php echo $brcode; ?>" readonly />
                                     </div>
                                 </div>                                
                                 <div class="col-md-3">

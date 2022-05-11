@@ -111,6 +111,29 @@ function listOfItem() {
     }
 }
 
+function materials_posting() {
+    let str = "";
+
+    $("#listofitem").html("");
+
+    if (arr.length > 0) {
+        for (let i = 0; i < arr.length; i++) {
+            str += "<tr>";
+            str += "<td>" + arr[i]["transno"] + "</span></td>";
+            str += "<td>" + arr[i]["transdate"] + "</td>";
+            str += "<td>" + arr[i]["proj_name"] + "</td>";
+            str += "<td>" + arr[i]["remarks"] + "</td>";
+            str += "<td><input type='checkbox' name='" + i + "' id='" + i + "' tabindex='-1' /></td>";
+            str += "</tr>";
+        }
+        str += "<tr>";
+        str += "<td colspan='5' align='right'><button type='button' class='btn btn-link' onclick='uncheckall()'><i class='fa fa-times'></i> Unselect All</button><button type='button' class='btn btn-link' onclick='checkall()'><i class='fa fa-check'></i> Select All</button></td>";
+        str += "</tr>";
+
+        $("#listofitem").html(str);
+    }
+}
+
 function clearform() {
     arr = [];
     $("#transdata").val("");
@@ -170,6 +193,74 @@ function validate() {
     });
 }
 
+function validate_posting(n){
+    let error_count = 0;
+    //-- check  required inputs
+    $(".req").each(function () {
+        if ($(this).val().trim() === "") {
+            error_count++;
+            $(this).addClass('is-invalid');
+
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).addClass('is-valid');
+        }
+    });
+
+    if (error_count > 0) {
+        return;
+    }
+
+    if (arr.length <= 0) {
+        $.alert({
+            title: 'Check box list is empty',
+            icon: 'fa fa-exclamation-triangle',
+            content: 'Please add billing details on the list and try again!',
+            type: 'red',
+            theme: "modern",
+            typeAnimated: true,
+            buttons: {
+                close: function () {}
+            }
+        });
+        return;
+    }
+
+    if ($(':checkbox:checked').length < 1) {
+        $.alert({
+            title: 'No selected',
+            icon: 'fa fa-exclamation-triangle',
+            content: 'Please select item from billing details and try again!',
+            type: 'red',
+            theme: "modern",
+            typeAnimated: true,
+            buttons: {
+                close: function () {}
+            }
+        });
+        return;
+    }
+
+    $("#transdata").val(JSON.stringify(arr));
+    $("#status").val(n);
+
+    $.confirm({
+        title: 'Confirmation',
+        icon: 'fa fa-question-circle',
+        content: 'Are you sure you want to post this transaction?',
+        type: 'blue',
+        theme: "modern",
+        typeAnimated: true,
+        buttons: {
+            yes: function () {
+                disform.action = 'ceg_billing_materials_post.php';
+                disform.submit();
+            },
+            close: function () {}
+        }
+    });
+}
+
 function reprint() {
     let brcode = $("#brcode").val();
     let transno = $("#transno").val();
@@ -191,4 +282,16 @@ function reprint() {
     $("#transno").val("");
     clearform();
     window.open("ceg_billing_materials_print.php?brcode=" + brcode + "&transno=" + transno, "BILLING MATERIALS PDF", "height=500, width=800, left=10, top=10");
+}
+
+function checkall() {
+    if (arr.length > 0) {
+        $(':checkbox').prop('checked', true); 
+    }
+}
+
+function uncheckall() {
+    if (arr.length > 0) {
+        $(':checkbox').prop('checked', false);
+    }
 }

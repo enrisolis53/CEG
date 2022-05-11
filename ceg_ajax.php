@@ -46,6 +46,26 @@ if ($trans == 'savedownloadedfiles') {
     $DB->execute([]);  
 }
 
+if ($trans == 'getmateriallist') {
+  
+    $DB->query('SELECT tbl_billing_head.Transno, tbl_billing_head.Transdate, tbl_billing_head.proj_id, proj_name, tbl_billing_head.Remarks FROM tbl_billing_head LEFT JOIN tbl_proj_profile ON (tbl_billing_head.proj_id=tbl_proj_profile.proj_id) WHERE tbl_billing_head.brcode=? AND posted=? ORDER BY tbl_billing_head.Transdate');    
+    $DB->execute([$brcode, 0]);
+    $rs = $DB->resultset();
+
+    if(count($rs) == 0) $info = "";
+    else $info = json_encode($rs);
+}
+
+if ($trans == 'getpostedmateriallist') {
+  
+    $DB->query('SELECT tbl_billing_head.Transno, tbl_billing_head.Transdate, tbl_billing_head.proj_id, proj_name, tbl_billing_head.Remarks FROM tbl_billing_head LEFT JOIN tbl_proj_profile ON (tbl_billing_head.proj_id=tbl_proj_profile.proj_id) WHERE tbl_billing_head.brcode=? AND posted=? ORDER BY tbl_billing_head.Transdate');    
+    $DB->execute([$brcode, 1]);
+    $rs = $DB->resultset();
+
+    if(count($rs) == 0) $info = "";
+    else $info = json_encode($rs);
+}
+
 echo $info;
 return;
 ?>
