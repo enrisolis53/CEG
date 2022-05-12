@@ -8,6 +8,7 @@ $mybrcode = $_SESSION["ceg_brcode"];
 $position = $_SESSION['positn'];
 $brcode = $_GET["brcode"];
 $transno = $_GET["transno"];
+$bmno = $_GET["bmno"];
 
 $DB = new classes\Database;
 
@@ -15,15 +16,37 @@ $DB->query('SELECT TOP (1) brcode, brloc, getdate() AS today FROM lib_access_acc
 $DB->execute([$brcode]);
 $rs = $DB->getrow();
 $brloc = utf8_decode(strtoupper(trim($rs[0]["brloc"])));
-$today = $rs[0]["today"];
+$transdate = date("Y-m-d", strtotime($rs[0]["today"]));
 
-$DB->query('SELECT DISTINCT proj_id, proj_name FROM tbl_proj_profile ORDER BY proj_name');
-$DB->execute([]);
-$rslstprojectname = $DB->resultset();
+$DB->query("SELECT a.proj_id, d.proj_name, a.Remarks, b.ItemCode, descrip, UOM, (Qty-Delivered) as bal FROM tbl_billing_head AS a, tbl_billing_body AS b, lib_items AS c, tbl_proj_profile AS d WHERE (a.BrCode=b.BrCode AND a.Transno=b.Transno AND b.ItemCode=c.itemcode AND a.proj_id=d.proj_id) AND a.brcode=? AND a.transno=?");
+$DB->execute([$brcode, $bmno]);
+$rs = $DB->resultset();
 
 $DB->query('SELECT itemcode, descrip, buum, brum FROM lib_items ORDER BY descrip');
 $DB->execute([]);
 $rslstitems = $DB->resultset();
+
+$arr = [];
+
+foreach ($rs as $row) {
+    $proj_name = utf8_decode(trim($row->proj_name));
+    $proj_id = $row->proj_id;
+    $remarks = utf8_decode(trim($row->Remarks));
+    $itemcode = utf8_decode(trim($row->ItemCode));
+    $descrip = utf8_decode(trim($row->descrip));
+    $uom = utf8_decode(trim($row->UOM));
+    $bal = floatval($row->bal);
+
+    if($bal>0){
+        $arr[] = array(
+            "itemcode"=>$itemcode,
+            "descrip"=>$descrip, 
+            "uom"=>$uom, 						
+            "bal"=>$bal
+        );
+    }  
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -68,26 +91,26 @@ $rslstitems = $DB->resultset();
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="branch">Branch Name</label>
-                                        <input list="lstbranchname" class="form-control req" id="branchname" name="branchname" value="<?php echo $brloc; ?>" readonly />
+                                        <input list="lstbranchname" class="form-control req" id="branchname" name="branchname" value="<?php echo $brloc; ?>" tabindex="-1" readonly />
                                     </div>
                                 </div> 
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transno">Branch Code</label>
-                                        <input type="text" class="form-control req" id="brcode" name="brcode" value="<?php echo $brcode; ?>" readonly />
+                                        <input type="text" class="form-control req" id="brcode" name="brcode" value="<?php echo $brcode; ?>" tabindex="-1" readonly />
                                     </div>
                                 </div>                                
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transno">Transaction Number</label>
-                                        <input type="number" class="form-control" id="transno" name="transno" value="" />
+                                        <input type="number" class="form-control" id="transno" name="transno" value="<?php echo $transno; ?>" tabindex="-1" readonly />
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transdate">Transaction Date</label>
-                                        <input type="date" class="form-control req" id="transdate" name="transdate" value="<?php echo $today; ?>" readonly />
-                                        <input type="hidden" id="today" name="today" value="<?php echo $today; ?>" />
+                                        <input type="date" class="form-control req" id="transdate" name="transdate" value="<?php echo $transdate; ?>" tabindex="-1" readonly />
+                                        <input type="hidden" id="today" name="today" value="<?php echo $transdate; ?>" />
                                     </div>
                                 </div>
 
@@ -105,23 +128,29 @@ $rslstitems = $DB->resultset();
                                                 <div class="col-md-6">
                                                     <div class="form-label-group">
                                                         <label for="proj_name">Project Name</label>
-                                                        <input list="lstprojname" class="form-control req" id="proj_name" name="proj_name" value="" />
+                                                        <input list="lstprojname" class="form-control req" id="proj_name" name="proj_name" value="<?php echo $proj_name; ?>" tabindex="-1" readonly />
                                                         <datalist id="lstprojname"></datalist>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-3">
                                                     <div class="form-label-group">
                                                         <label for="proj_id">Project ID</label>
-                                                        <input type="text" class="form-control req" id="proj_id" name="proj_id" placeholder="" value="" tabindex="-1" readonly />
+                                                        <input type="text" class="form-control req" id="proj_id" name="proj_id" placeholder="" value="<?php echo $proj_id; ?>" tabindex="-1" readonly />
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-label-group">
+                                                        <label for="bmno">Billing Materials Number</label>
+                                                        <input type="text" class="form-control req" id="bmno" name="bmno" placeholder="" value="<?php echo $bmno; ?>" tabindex="-1" readonly />
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div class="row">
-                                                <div class="col-lg-9 mt-3">
+                                                <div class="col-lg-12 mt-3">
                                                     <div class="form-label-group">
                                                         <label for="remarks">Remarks</label>
-                                                        <input type="text" class="form-control" id="remarks" name="remarks" value="" />
+                                                        <input type="text" class="form-control" id="remarks" name="remarks" value="<?php echo $remarks; ?>" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -171,6 +200,36 @@ $rslstitems = $DB->resultset();
                                                         </datalist>
                                                     </div>
                                                 </div>
+                                                <div class="col-lg-3">
+                                                    <div class="form-label-group">
+                                                        <label for="notedby">Noted by</label>
+                                                        <input list="lstnoted" class="form-control req" id="notedby" name="notedby" value="<?php echo $username; ?>" />
+                                                        <input type="hidden" id="notedbypos" name="notedbypos" value="<?php echo $position; ?>" />
+                                                        <datalist id="lstprep">
+                                                            <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
+                                                        </datalist>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-3">
+                                                    <div class="form-label-group">
+                                                        <label for="recommendby">Recommending Approval</label>
+                                                        <input list="lstrecommend" class="form-control req" id="recommendby" name="recommendby" value="<?php echo $username; ?>" />
+                                                        <input type="hidden" id="recommendbypos" name="recommendbypos" value="<?php echo $position; ?>" />
+                                                        <datalist id="lstprep">
+                                                            <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
+                                                        </datalist>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-3">
+                                                    <div class="form-label-group">
+                                                        <label for="approvedby">Approved By</label>
+                                                        <input list="lstapprove" class="form-control req" id="approvedby" name="approvedby" value="<?php echo $username; ?>" />
+                                                        <input type="hidden" id="approvebypos" name="approvebypos" value="<?php echo $position; ?>" />
+                                                        <datalist id="lstprep">
+                                                            <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
+                                                        </datalist>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -180,9 +239,8 @@ $rslstitems = $DB->resultset();
 
                             <div class="row">
 
-                                <div class="col-lg-3 offset-lg-9 mt-4">
+                                <div class="col-lg-12 offset-lg-10 mt-4">
                                     <button type="button" class="btn btn-link" id="btnSave" onclick="validate()"><i class="fa fa-check"></i> Save</button>
-                                    <button type="button" class="btn btn-link" id="btnPrint" onclick="reprint()"><i class="fa fa-print"></i> Print</button>
                                 </div>
 
                             </div>
@@ -239,12 +297,6 @@ $rslstitems = $DB->resultset();
                                 <input type="number" class="form-control" id="quantity" name="quantity" value=""/>
                             </div>
                         </div>  
-                        <!-- <div class="col-lg-9 mt-3">
-                            <div class="form-label-group">
-                                <label for="notes">Notes</label>
-                                <input type="text" class="form-control" id="notes" name="notes" value="" />
-                            </div>
-                        </div>  -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -275,83 +327,15 @@ $rslstitems = $DB->resultset();
     <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
     <script src="vendor/jquery/jquery-confirm.js"></script>
     <script src="vendor/datepicker/dpicker.js"></script>
-    <script text="text/javascript" src="main/js/ceg_billing_materials.js"></script>
+    <script text="text/javascript" src="main/js/ceg_rp.js"></script>
     <script text="text/javascript" src="main/js/menu.js"></script>
     <script type='text/javascript'>
+
+    window.onload = function() {
+        loaditems();
+    }
+
     $(function() {
-
-        $("#branchname").blur(function(e) {
-            clearform();
-            $("#brcode").val(""); 	
-            var thisval = ($(this).val()).toUpperCase();
-            
-            $('#lstbranchname option').each(function(i,e) {
-                var optval = ($(this).val()).toUpperCase();
-                var optlbl = $(this).attr("label");
-                if (optval==thisval) { 
-                    $("#brcode").val(optlbl); 
-
-                    $.post("ceg_ajax.php", {
-                        "brcode": optlbl,
-                        "proj_id": "",
-                        "trans": "getprojectnamelist" 
-                        }, function (str) {
-                        //-- load data to list
-                        if (str.length > 0) {
-                            let arrdetails = JSON.parse(str);
-                            let proj_id = "";
-                            let proj_name = "";
-                            let options = "";
-
-                            for (let ix = 0; ix < arrdetails.length; ix++) {                            
-                                proj_id = arrdetails[ix]["proj_id"];
-                                proj_name = arrdetails[ix]["proj_name"];
-
-                                options += '<option value="' + proj_name + '" label="' + proj_id + '"></option>';
-                            }
-
-                            document.getElementById('lstprojname').innerHTML = options;
-                            document.getElementById('lstprojname1').innerHTML = options;
-                        }
-                    });
-                }
-            });            
-        });
-
-        $("#transno").change(function(e) {
-            clearform();
-        });
-
-        $("#proj_name").keyup(function(e) {;
-            var discnt = 0;
-            var disval = $(this).val().toUpperCase();
-            var dislen = disval.length;
-            $('#lstprojname').html('');
-            $('#lstprojname1 option').each(function (i, e) {
-                var optval = $(this).val().toUpperCase().substr(0, dislen);
-                if (disval == optval) {
-                    if (discnt == 10) {
-                        Debug.Break();
-                    }
-                    $('#lstprojname').append('<option value=\"' + $(this).val() + '\" label=\"' + $(this).attr('label') + '\">');
-                    discnt++;
-                }
-            });
-        });
-
-        $("#proj_name").blur(function(e) {
-            var thisval = ($(this).val()).toUpperCase();
-            $("#proj_id").val("");
-
-            $('#lstprojname option').each(function(i,e) {
-                var optval = ($(this).val()).toUpperCase();
-                var optlbl = $(this).attr("label");
-                if (optval==thisval) { 
-                    $("#proj_name").val(optval); 
-                    $("#proj_id").val(optlbl);
-                }
-            });            
-        });
 
         $("#itemdescrip").keyup(function(e) {;
             var discnt = 0;
@@ -409,6 +393,11 @@ $rslstitems = $DB->resultset();
                 }                
             }
         }
+    }
+
+    function loaditems(){
+        let arr = '<?php echo $arr; ?>';
+        alert(<?php echo $arr; ?>);
     }
     </script>
 

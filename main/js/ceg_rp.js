@@ -9,7 +9,7 @@ function listOfItem() {
     if (arr.length > 0) {
         for (let i = 0; i < arr.length; i++) {
             str += "<tr>";
-            str += "<td><button type='button' id='btnSelect' onclick='selectme(\"" + arr[i]["transno"] + "\")' title='Select option number to view billing material details'>" + (i+1) + "</i></button></td>";
+            str += "<td><button type='button' class='btn btn-link' id='btnSelect' onclick='selectme(\"" + arr[i]["transno"] + "\")' title='Select option number to view billing material details' style='font-size: 14px; margin-top: -7px;'>" + (i+1) + "</i></button></td>";
             str += "<td>" + arr[i]["transno"] + "</td>";
             str += "<td>" + arr[i]["transdate"] + "</td>";
             str += "<td>" + arr[i]["proj_name"] + "</td>";
@@ -47,6 +47,12 @@ function reprint() {
 function selectme(transno) {
     let brcode = $("#brcode").val();
     
-    disform.action = 'ceg_rp.php?brcode='+brcode+'&transno='+transno;
+    disform.action = 'ceg_rp.php?brcode='+brcode+'&transno=&bmno='+transno;
     disform.submit();
+}
+
+function clearform() {
+    $("#brcode").val("");
+    arr = [];
+    listOfItem();
 }

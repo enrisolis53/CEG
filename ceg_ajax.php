@@ -57,13 +57,34 @@ if ($trans == 'getmateriallist') {
 }
 
 if ($trans == 'getpostedmateriallist') {
-  
-    $DB->query('SELECT tbl_billing_head.Transno, tbl_billing_head.Transdate, tbl_billing_head.proj_id, proj_name, tbl_billing_head.Remarks FROM tbl_billing_head LEFT JOIN tbl_proj_profile ON (tbl_billing_head.proj_id=tbl_proj_profile.proj_id) WHERE tbl_billing_head.brcode=? AND posted=? ORDER BY tbl_billing_head.Transdate');    
+    $arrlist = [];
+    //$DB->query('SELECT tbl_billing_head.Transno, tbl_billing_head.Transdate, tbl_billing_head.proj_id, proj_name, tbl_billing_head.Remarks FROM tbl_billing_head LEFT JOIN tbl_proj_profile ON (tbl_billing_head.proj_id=tbl_proj_profile.proj_id) WHERE tbl_billing_head.brcode=? AND posted=? ORDER BY tbl_billing_head.Transdate');
+    $DB->query('SELECT a.Transno, a.Transdate, a.proj_id, proj_name, a.Remarks, SUM(Qty-Delivered) AS cnt FROM tbl_billing_head AS a, tbl_billing_body AS b, tbl_proj_profile as C WHERE a.brcode=b.BrCode AND a.Transno=b.Transno AND a.proj_id=c.proj_id AND a.brcode=? AND posted=? GROUP BY a.brcode, a.transno, a.Transdate, a.proj_id, proj_name, a.Remarks ORDER BY a.Transdate');
     $DB->execute([$brcode, 1]);
-    $rs = $DB->resultset();
+    $rs = $DB->getrow();
+    foreach($rs as $rows){
+        $Transno = trim($rows["Transno"]);
+        $Transdate = trim($rows["Transdate"]);
+        $proj_id = $rows["proj_id"];
+        $proj_name = trim($rows["proj_name"]);
+        $Remarks = trim($rows["Remarks"]);
+        $cnt = is_null($rows["cnt"])?0:intval($rows["cnt"]);
 
-    if(count($rs) == 0) $info = "";
-    else $info = json_encode($rs);
+        if($cnt>0){
+            $arrlist[] = array(
+                "Transno"=>$Transno,
+                "Transdate"=>$Transdate,
+                "proj_name"=>utf8_decode($proj_name),
+                "Remarks"=>utf8_decode($Remarks)
+            );
+        }
+    }
+
+    $info = json_encode($arrlist);
+
+    if(count($arrlist) == 0) $info = "";
+    else $info = json_encode($arrlist);
+    
 }
 
 echo $info;

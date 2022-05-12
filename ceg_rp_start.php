@@ -150,7 +150,7 @@ $rslstbranchname = $DB->resultset();
     $(function() {
 
         $("#branchname").blur(function(e) {
-            $("#brcode").val(""); 	
+            clearform();	
             var thisval = ($(this).val()).toUpperCase();
             
             $('#lstbranchname option').each(function(i,e) {
@@ -188,7 +188,6 @@ $rslstbranchname = $DB->resultset();
                                     });
                                 }
                             }
-
                             listOfItem();
                         } else {
                             $.alert({
