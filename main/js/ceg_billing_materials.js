@@ -99,16 +99,102 @@ function listOfItem() {
             ctr ++;
 
             str += "<tr>";
-            str += "<td align='center'><span style='cursor:pointer; color:#f00;' onclick='removeme(\"" + arr[i]["itemcode"] + "\");' data-toggle='tooltip' data-html='true' title='Remove this item?'>" + ctr + "</span></td>";
+            str += "<td align='left'><span style='cursor:pointer; color:#f00;' onclick='removeme(\"" + arr[i]["itemcode"] + "\");' data-toggle='tooltip' data-html='true' title='Remove this item?'>&nbsp;&nbsp;&nbsp;" + ctr + "</span></td>";
             str += "<td>" + arr[i]["itemcode"] + "</td>";
             str += "<td>" + arr[i]["itemdescrip"] + "</td>";
-            str += "<td align='center'>" + arr[i]["units"] + "</td>";
+            str += "<td align='left'>" + arr[i]["units"] + "</td>";
             str += "<td align='center'>" + arr[i]["quantity"] + "</td>";
             str += "</tr>";
         }
 
         $("#listofitem").html(str);
     }
+}
+
+function getpreviewsdata() {
+    let brcode = $("#brcode").val();
+    let transno = $("#transno").val();
+    clearform();
+  
+    if (brcode.length <= 0 && transno.length <= 0) return;
+
+    $.post(
+      "ceg_ajax.php", {
+        trans: "getpreviewsdata",
+        brcode: brcode,
+        transno: transno
+      },
+      function (str) {
+        let chk = str.search("error");
+  
+        if (chk > 0) {
+          $.alert({
+            title: "Invalid",
+            icon: "fa fa-exclamation-triangle",
+            content: "No record found please try again!",
+            type: "red",
+            theme: "modern",
+            typeAnimated: true,
+            buttons: {
+              close: function () {
+                clearform();
+              },
+            },
+          });
+          return;
+        }
+  
+        //-- load to form
+        if (str.length > 0) {
+          let arrdetails = str.split("^");
+  
+          let arrhead = JSON.parse(arrdetails[0]);
+          for (let ix = 0; ix < arrhead.length; ix++) {
+            
+            if((arrhead[ix]["posted"])==1){ 
+                $.alert({
+                    title: "Invalid",
+                    icon: "fa fa-exclamation-triangle",
+                    content: "Record already posted!",
+                    type: "red",
+                    theme: "modern",
+                    typeAnimated: true,
+                    buttons: {
+                        close: function () {
+                            clearform();
+                        },
+                    },
+                });
+                return;  
+            }
+
+            $("#transno").val(transno);
+            $("#transdate").val(arrhead[ix]["transdate"]);
+            $("#proj_name").val(arrhead[ix]["proj_name"]);
+            $("#proj_id").val(arrhead[ix]["proj_id"]);
+            $("#remarks").val(arrhead[ix]["remarks"]);
+            $("#prepby").val(arrhead[ix]["preparedby"]);
+            $("#prepbypos").val(arrhead[ix]["preparedpos"]);
+          }
+  
+          let arrbody = JSON.parse(arrdetails[1]);
+          for (let ix = 0; ix < arrbody.length; ix++) {
+            let xitemcode = arrbody[ix]["itemcode"];
+            let xitemdesc = arrbody[ix]["itemdescrip"];
+            let xunits = arrbody[ix]["units"];
+            let xquantity = parseFloat(arrbody[ix]["quantity"]);
+            
+            arr.push({
+              "itemcode": xitemcode,
+              "itemdescrip": xitemdesc,
+              "units": xunits,
+              "quantity": xquantity
+            });
+          }
+          listOfItem();
+        }
+      }
+    );
 }
 
 function materials_posting() {
@@ -135,6 +221,11 @@ function materials_posting() {
 }
 
 function clearform() {
+    $("#transno").val('');
+    $("#transdate").val($("#today").val());
+    $("#proj_name").val('');
+    $("#proj_id").val('');
+    $("#remarks").val('');
     arr = [];
     $("#transdata").val("");
     listOfItem();

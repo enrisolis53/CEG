@@ -87,6 +87,55 @@ if ($trans == 'getpostedmateriallist') {
     
 }
 
+if ($trans == 'getpreviewsdata') {
+    $transno = str_pad(strval($_POST["transno"]), 8, "0", STR_PAD_LEFT);
+    $arrhead = [];
+    $arrbody = [];
+    $ctr = 0;
+
+    $DB->query("SELECT a.Transdate, a.proj_id, d.proj_name, a.Remarks, a.Preparedby, Preparedpos, a.posted, b.ItemCode, descrip, UOM, Qty FROM tbl_billing_head AS a, tbl_billing_body AS b, lib_items AS c, tbl_proj_profile AS d WHERE (a.BrCode=b.BrCode AND a.Transno=b.Transno AND b.ItemCode=c.itemcode AND a.proj_id=d.proj_id) AND a.brcode=? AND a.transno=?");
+    $DB->execute([$brcode, $transno]);
+    $rs = $DB->resultset();
+
+    foreach($rs as $row){
+        $transdate = $row->Transdate;
+        $proj_name = utf8_decode(trim($row->proj_name));
+        $proj_id = $row->proj_id;
+        $remarks = utf8_decode(trim($row->Remarks));
+        $preparedby = utf8_decode(trim($row->Preparedby));
+        $preparedpos = utf8_decode(trim($row->Preparedpos));
+        $itemcode = utf8_decode(trim($row->ItemCode));
+        $descrip = utf8_decode(trim($row->descrip));
+        $uom = utf8_decode(trim($row->UOM));
+        $qty = floatval($row->Qty);
+        $posted = intval($row->posted);
+
+        if($ctr==0){
+            $arrhead[] = array(
+                "transdate"=>$transdate,
+                "proj_name"=>$proj_name,
+                "proj_id"=>$proj_id,
+                "remarks"=>$remarks,
+                "preparedby"=>$preparedby,
+                "preparedpos"=>$preparedpos,
+                "posted"=>$posted
+            );
+        }
+
+        $arrbody[] = array(
+            "itemcode"=>$itemcode,
+            "itemdescrip"=>$descrip, 
+            "units"=>$uom, 						
+            "quantity"=>$qty
+        );
+
+        $ctr++;
+    }
+
+    if($ctr == 0) $info = "~error";
+    else $info = json_encode($arrhead)."^".json_encode($arrbody);
+}
+
 echo $info;
 return;
 ?>

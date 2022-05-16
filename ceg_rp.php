@@ -1,6 +1,6 @@
 <?php
 session_start();
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 include('classes/Database.class.php');
 
 $empid = $_SESSION['ceg_empid'];
@@ -25,6 +25,10 @@ $rs = $DB->resultset();
 $DB->query('SELECT itemcode, descrip, buum, brum FROM lib_items ORDER BY descrip');
 $DB->execute([]);
 $rslstitems = $DB->resultset();
+
+$DB->query("SELECT (RTRIM(Fname)+' '+LEFT(Mname,1)+' '+RTRIM(Lname)) AS cname, EmpID, Positn FROM PIS.dbo.tEmployee WHERE eRem='Active' AND (Positn NOT LIKE '%DRIVER%' AND Positn NOT LIKE '%JANITOR%' AND Positn NOT LIKE '%MESSENGER%') ORDER BY Lname,Fname"); 
+$DB->execute([]);
+$rslstemp = $DB->resultset();
 
 $arr = [];
 
@@ -56,9 +60,9 @@ foreach ($rs as $row) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="vendor/datepicker/dpicker.min.css">
+    <!-- <link rel="stylesheet" href="vendor/datepicker/dpicker.min.css"> -->
     <link rel="stylesheet" href="vendor/fontawesome/css/all.css">
-    <link rel="stylesheet" href="vendor/material-icons/icons.css">
+    <!-- <link rel="stylesheet" href="vendor/material-icons/icons.css"> -->
     <link rel="stylesheet" href="vendor/jquery/jquery-confirm.css">
 
 </head>
@@ -156,28 +160,29 @@ foreach ($rs as $row) {
                                             </div>
 
                                             <div class="row">
-                                                <div class="cards mt-3">
-                                                    <div class="cards-body">
-                                                        <div class="responsive-table">
+                                                <div class="col-lg-12 mt-3">
+                                                    <div class="cards">
+                                                        <div class="cards-body">
+                                                            <div class="responsive-table">
 
-                                                            <table class="table table-striped table-sm">
-                                                                <thead class="bg-light text-secondary">
-                                                                    <tr>
-                                                                        <th><button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#materialsModal"><i class="fa fa-plus"></i></button></th>
-                                                                        <th class="text-center">Item Code</th>
-                                                                        <th class="text-center">Item Desciption</th>
-                                                                        <th class="text-center">Units</th>
-                                                                        <th class="text-center">Quantity</th>
-                                                                        <!-- <th class="text-center">Notes</th> -->
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="listofitem">
+                                                                <table class="table table-striped table-sm">
+                                                                    <thead class="bg-light text-secondary">
+                                                                        <tr>
+                                                                            <th class="text-left"><button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#materialsModal"><i class="fa fa-plus"></i></button></th>
+                                                                            <th class="text-left">Item Code</th>
+                                                                            <th class="text-left">Item Desciption</th>
+                                                                            <th class="text-center">Units</th>
+                                                                            <th class="text-center">Quantity</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="listofitem">
 
-                                                                </tbody>
-                                                            </table>
+                                                                    </tbody>
+                                                                </table>
 
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </div> 
                                                 </div>                                              
                                             </div>
                                         
@@ -190,45 +195,49 @@ foreach ($rs as $row) {
                                     <div class="card mb-3">
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-lg-3">
+                                                <div class="col-lg-4">
                                                     <div class="form-label-group">
                                                         <label for="prepby">Prepared By</label>
-                                                        <input list="lstprep" class="form-control req" id="prepby" name="prepby" value="<?php echo $username; ?>" />
-                                                        <input type="hidden" id="prepbypos" name="prepbypos" value="<?php echo $position; ?>" />
-                                                        <datalist id="lstprep">
-                                                            <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
-                                                        </datalist>
+                                                        <input list="lstempname" class="form-control req" id="prepby" name="prepby" value="<?php echo strtoupper($username); ?>" readonly tabindex='-1' />
+                                                        <input type="text" class="form-control" id="prepbypos" name="prepbypos" value="<?php echo strtoupper($position); ?>" readonly readonly tabindex='-1' />
                                                     </div>
                                                 </div>
-                                                <div class="col-lg-3">
+                                                <div class="col-lg-4">
                                                     <div class="form-label-group">
-                                                        <label for="notedby">Noted by</label>
-                                                        <input list="lstnoted" class="form-control req" id="notedby" name="notedby" value="<?php echo $username; ?>" />
-                                                        <input type="hidden" id="notedbypos" name="notedbypos" value="<?php echo $position; ?>" />
-                                                        <datalist id="lstprep">
-                                                            <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
-                                                        </datalist>
+                                                        <label for="notedby">Requested by</label> <!-- <label for="notedby">Noted by</label> -->
+                                                        <input list="lstnotedby" class="form-control req" id="notedby" name="notedby" value="" />
+                                                        <input type="text" class="form-control" id="notedbypos" name="notedbypos" value="" readonly readonly tabindex='-1' />
+                                                        <datalist id="lstnotedby"></datalist>
                                                     </div>
                                                 </div>
-                                                <div class="col-lg-3">
+                                                <div class="col-lg-4">
+                                                    <div class="form-label-group">
+                                                        <label for="checkedbypos">Checked & Verified by</label>
+                                                        <input list="lstcheckedby" class="form-control" id="checkedby" name="checkedby" value="" />
+                                                        <input type="text" class="form-control" id="checkedbypos" name="checkedbypos" value="" readonly readonly tabindex='-1' />
+                                                        <datalist id="lstcheckedby"></datalist>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-lg-4">
                                                     <div class="form-label-group">
                                                         <label for="recommendby">Recommending Approval</label>
-                                                        <input list="lstrecommend" class="form-control req" id="recommendby" name="recommendby" value="<?php echo $username; ?>" />
-                                                        <input type="hidden" id="recommendbypos" name="recommendbypos" value="<?php echo $position; ?>" />
-                                                        <datalist id="lstprep">
-                                                            <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
-                                                        </datalist>
+                                                        <input list="lstrecommendby" class="form-control req" id="recommendby" name="recommendby" value="" />
+                                                        <input type="text" class="form-control" id="recommendbypos" name="recommendbypos" value="" readonly readonly tabindex='-1' />
+                                                        <datalist id="lstrecommendby"></datalist>
                                                     </div>
                                                 </div>
-                                                <div class="col-lg-3">
+                                                <div class="col-lg-4">
                                                     <div class="form-label-group">
                                                         <label for="approvedby">Approved By</label>
-                                                        <input list="lstapprove" class="form-control req" id="approvedby" name="approvedby" value="<?php echo $username; ?>" />
-                                                        <input type="hidden" id="approvebypos" name="approvebypos" value="<?php echo $position; ?>" />
-                                                        <datalist id="lstprep">
-                                                            <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
-                                                        </datalist>
+                                                        <input list="lstapprovedby" class="form-control req" id="approvedby" name="approvedby" value="" />
+                                                        <input type="text" class="form-control" id="approvebypos" name="approvebypos" value="" readonly readonly tabindex='-1' />
+                                                        <datalist id="lstapprovedby"></datalist>
                                                     </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    &nbsp;
                                                 </div>
                                             </div>
                                         </div>
@@ -308,7 +317,16 @@ foreach ($rs as $row) {
 
     <?php include('menu-end.php'); ?>
 
-    <datalist id="lstprojname1"></datalist>
+    <datalist id="lstempname">
+    <?php
+    foreach ($rslstemp as $row){
+        $EmpID = $row->EmpID;
+        $cname = $row->cname;
+        $Positn = $row->Positn;
+        echo "<option value='$cname' label='$Positn'></option>";
+    }
+    ?>
+    </datalist>
 
     <datalist id="lstitems1">
     <?php
@@ -326,16 +344,141 @@ foreach ($rs as $row) {
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
     <script src="vendor/jquery/jquery-confirm.js"></script>
-    <script src="vendor/datepicker/dpicker.js"></script>
+    <!-- <script src="vendor/datepicker/dpicker.js"></script> -->
     <script text="text/javascript" src="main/js/ceg_rp.js"></script>
     <script text="text/javascript" src="main/js/menu.js"></script>
     <script type='text/javascript'>
 
     window.onload = function() {
-        loaditems();
+        let arrdata = '<?php echo json_encode($arr); ?>';
+        loaddata(arrdata);
     }
 
     $(function() {
+
+        $("#notedby").keyup(function(e) {;
+            var discnt = 0;
+            var disval = $(this).val().toUpperCase();
+            var dislen = disval.length;
+            $('#lstnotedby').html('');
+            $('#lstempname option').each(function (i, e) {
+                var optval = $(this).val().toUpperCase().substr(0, dislen);
+                if (disval == optval) {
+                    if (discnt == 10) {
+                        Debug.Break();
+                    }
+                    $('#lstnotedby').append('<option value=\"' + $(this).val() + '\" label=\"' + $(this).attr('label') + '\">');
+                    discnt++;
+                }
+            });
+        });
+
+        $("#notedby").blur(function(e) {
+            var thisval = ($(this).val()).toUpperCase();
+            $("#notedbypos").val("");
+
+            $('#lstnotedby option').each(function(i,e) {
+                var optval = ($(this).val()).toUpperCase();
+                var optlbl = $(this).attr("label");
+                if (optval==thisval) { 
+                    $("#notedby").val(optval);
+                    $("#notedbypos").val(optlbl);
+                }
+            });            
+        });
+
+        $("#checkedby").keyup(function(e) {;
+            var discnt = 0;
+            var disval = $(this).val().toUpperCase();
+            var dislen = disval.length;
+            $('#lstcheckedby').html('');
+            $('#lstempname option').each(function (i, e) {
+                var optval = $(this).val().toUpperCase().substr(0, dislen);
+                if (disval == optval) {
+                    if (discnt == 10) {
+                        Debug.Break();
+                    }
+                    $('#lstcheckedby').append('<option value=\"' + $(this).val() + '\" label=\"' + $(this).attr('label') + '\">');
+                    discnt++;
+                }
+            });
+        });
+
+        $("#checkedby").blur(function(e) {
+            var thisval = ($(this).val()).toUpperCase();
+            $("#checkedbypos").val("");
+
+            $('#lstcheckedby option').each(function(i,e) {
+                var optval = ($(this).val()).toUpperCase();
+                var optlbl = $(this).attr("label");
+                if (optval==thisval) { 
+                    $("#checkedby").val(optval);
+                    $("#checkedbypos").val(optlbl);
+                }
+            });            
+        });
+
+        $("#recommendby").keyup(function(e) {;
+            var discnt = 0;
+            var disval = $(this).val().toUpperCase();
+            var dislen = disval.length;
+            $('#lstrecommendby').html('');
+            $('#lstempname option').each(function (i, e) {
+                var optval = $(this).val().toUpperCase().substr(0, dislen);
+                if (disval == optval) {
+                    if (discnt == 10) {
+                        Debug.Break();
+                    }
+                    $('#lstrecommendby').append('<option value=\"' + $(this).val() + '\" label=\"' + $(this).attr('label') + '\">');
+                    discnt++;
+                }
+            });
+        });
+
+        $("#recommendby").blur(function(e) {
+            var thisval = ($(this).val()).toUpperCase();
+            $("#recommendbypos").val("");
+
+            $('#lstrecommendby option').each(function(i,e) {
+                var optval = ($(this).val()).toUpperCase();
+                var optlbl = $(this).attr("label");
+                if (optval==thisval) { 
+                    $("#recommendby").val(optval);
+                    $("#recommendbypos").val(optlbl);
+                }
+            });            
+        });
+
+        $("#approvedby").keyup(function(e) {;
+            var discnt = 0;
+            var disval = $(this).val().toUpperCase();
+            var dislen = disval.length;
+            $('#lstapprovedby').html('');
+            $('#lstempname option').each(function (i, e) {
+                var optval = $(this).val().toUpperCase().substr(0, dislen);
+                if (disval == optval) {
+                    if (discnt == 10) {
+                        Debug.Break();
+                    }
+                    $('#lstapprovedby').append('<option value=\"' + $(this).val() + '\" label=\"' + $(this).attr('label') + '\">');
+                    discnt++;
+                }
+            });
+        });
+
+        $("#approvedby").blur(function(e) {
+            var thisval = ($(this).val()).toUpperCase();
+            $("#approvebypos").val("");
+
+            $('#lstapprovedby option').each(function(i,e) {
+                var optval = ($(this).val()).toUpperCase();
+                var optlbl = $(this).attr("label");
+                if (optval==thisval) { 
+                    $("#approvedby").val(optval);
+                    $("#approvebypos").val(optlbl);
+                }
+            });            
+        });
 
         $("#itemdescrip").keyup(function(e) {;
             var discnt = 0;
@@ -393,11 +536,6 @@ foreach ($rs as $row) {
                 }                
             }
         }
-    }
-
-    function loaditems(){
-        let arr = '<?php echo $arr; ?>';
-        alert(<?php echo $arr; ?>);
     }
     </script>
 

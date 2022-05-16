@@ -80,19 +80,19 @@ $rslstitems = $DB->resultset();
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transno">Branch Code</label>
-                                        <input type="text" class="form-control req" id="brcode" name="brcode" value="" readonly />
+                                        <input type="text" class="form-control req" id="brcode" name="brcode" value="" tabindex="-1" readonly />
                                     </div>
                                 </div>                                
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transno">Transaction Number</label>
-                                        <input type="number" class="form-control" id="transno" name="transno" value="" />
+                                        <input type="number" class="form-control" id="transno" name="transno" value="" tabindex="-1" />
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transdate">Transaction Date</label>
-                                        <input type="date" class="form-control req" id="transdate" name="transdate" value="<?php echo $today; ?>" readonly />
+                                        <input type="date" class="form-control req" id="transdate" name="transdate" value="<?php echo $today; ?>" tabindex="-1" readonly />
                                         <input type="hidden" id="today" name="today" value="<?php echo $today; ?>" />
                                     </div>
                                 </div>
@@ -133,29 +133,31 @@ $rslstitems = $DB->resultset();
                                             </div>
 
                                             <div class="row">
-                                                <div class="cards mt-3">
-                                                    <div class="cards-body">
-                                                        <div class="responsive-table">
+                                                <div class="col-lg-12 mt-3">
+                                                    <div class="cards">
+                                                        <div class="cards-body">
+                                                            <div class="responsive-table">
 
-                                                            <table class="table table-striped table-sm">
-                                                                <thead class="bg-light text-secondary">
-                                                                    <tr>
-                                                                        <th><button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#materialsModal"><i class="fa fa-plus"></i></button></th>
-                                                                        <th class="text-center">Item Code</th>
-                                                                        <th class="text-center">Item Desciption</th>
-                                                                        <th class="text-center">Units</th>
-                                                                        <th class="text-center">Quantity</th>
-                                                                        <!-- <th class="text-center">Notes</th> -->
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="listofitem">
+                                                                <table class="table table-striped table-sm">
+                                                                    <thead class="bg-light text-secondary">
+                                                                        <tr>
+                                                                            <th><button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#materialsModal"><i class="fa fa-plus"></i></button></th>
+                                                                            <th class="text-left">Item Code</th>
+                                                                            <th class="text-left">Item Desciption</th>
+                                                                            <th class="text-left">Units</th>
+                                                                            <th class="text-center">Quantity</th>
+                                                                            <!-- <th class="text-center">Notes</th> -->
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="listofitem">
 
-                                                                </tbody>
-                                                            </table>
+                                                                    </tbody>
+                                                                </table>
 
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </div>                                              
+                                                    </div>  
+                                                </div>                                             
                                             </div>
                                         
                                         </div>
@@ -170,11 +172,8 @@ $rslstitems = $DB->resultset();
                                                 <div class="col-lg-3">
                                                     <div class="form-label-group">
                                                         <label for="prepby">Prepared By</label>
-                                                        <input list="lstprep" class="form-control req" id="prepby" name="prepby" value="<?php echo $username; ?>" />
-                                                        <input type="hidden" id="prepbypos" name="prepbypos" value="<?php echo $position; ?>" />
-                                                        <datalist id="lstprep">
-                                                            <option value='<?php echo $username; ?>' label='<?php echo $empid; ?>'>
-                                                        </datalist>
+                                                        <input list="lstprep" class="form-control req" id="prepby" name="prepby" value="<?php echo strtoupper($username); ?>" readonly />
+                                                        <input type="text" class="form-control" id="prepbypos" name="prepbypos" value="<?php echo strtoupper($position); ?>" readonly />
                                                     </div>
                                                 </div>
                                             </div>
@@ -324,8 +323,19 @@ $rslstitems = $DB->resultset();
             });            
         });
 
-        $("#transno").change(function(e) {
-            clearform();
+        $("#transno").blur(function(e) {
+            var transno = $(this).val();
+
+            if (transno.length <= 0) return;
+            if (isNaN(transno)) return;
+            let x = parseInt(transno).toString();
+
+            if (x.length > 8) {
+                $("#transno").val("");
+                return;
+            }
+
+            getpreviewsdata();
         });
 
         $("#proj_name").keyup(function(e) {;

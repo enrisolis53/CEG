@@ -20,6 +20,8 @@ $prepbypos = utf8_decode(strtoupper(trim($_POST["prepbypos"])));
 
 $arrs = json_decode($_POST["transdata"], true);
 
+$transno = str_pad(strval($transno), 8, "0", STR_PAD_LEFT);
+
 $DB->query("DELETE FROM tbl_billing_body WHERE BrCode=? AND Transno=?");
 $DB->execute([$brcode, $transno]);
 
@@ -28,13 +30,13 @@ if ($trans == "new") {
     $DB->execute([$brcode]);
     $rsmax = $DB->getrow();
     $transno = str_pad(strval($rsmax[0]["maxno"]+1), 8, "0", STR_PAD_LEFT);
+
+    $DB->query("INSERT INTO tbl_billing_head (BrCode, Transno, Transdate, proj_id, Remarks, Preparedby, Preparedpos) VALUES ('$brcode','$transno','$transdate',$proj_id,'$remarks','$prepby','$prepbypos')");
+    $DB->execute([]);
 } else {
     $DB->query("UPDATE tbl_billing_head SET proj_id=$proj_id, Remarks='$remarks', Preparedby='$prepby', Preparedpos='$prepbypos' WHERE brcode=? AND transno=?");
     $DB->execute([$brcode, $transno]);
 }
-
-$DB->query("INSERT INTO tbl_billing_head (BrCode, Transno, Transdate, proj_id, Remarks, Preparedby, Preparedpos) VALUES ('$brcode','$transno','$transdate',$proj_id,'$remarks','$prepby','$prepbypos')");
-$DB->execute([]);
 
 foreach ($arrs as $row) {
 

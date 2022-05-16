@@ -65,16 +65,16 @@ foreach($arr as $row1){
     $xqty = $row1["qty"];
 
     $disbody .= "<tr>
-    <td width='82' height='16' align='center'>$xitemcode</td>
-    <td width='401' height='16' align='left'>$xdescrip</td>
-    <td width='99' height='16' align='center'>$xuom</td>
-    <td width='99' height='16' align='right'>$xqty</td>
+    <td width='95' height='16' align='left'>$xitemcode</td>
+    <td width='395' height='16' align='left'>$xdescrip</td>
+    <td width='120' height='16' align='left'>$xuom</td>
+    <td width='80' height='16' align='center'>$xqty</td>
     </tr>";
 }
 $disbody .= "</table><br/><br/><br/><br/><br/>";
 
 $disbody .= "<table><tr>
-<td><font style='font-size:10px;'>PREPARED BY:</font><br/><br/><br/>".str_repeat('_',25)."<br />
+<td><font style='font-size:10px;'>PREPARED BY:</font><br/><br/><br/>".str_repeat('_',20)."<br />
 <font style='font-size:10px;'><b>".$preparedby."</b></font><br />
 <font style='font-size:8px;'>".$preparedpos."</font>
 </td>
@@ -84,14 +84,18 @@ $disbody .= "<table><tr>
 $header = "<page_header>
 
 <div style='position:absolute; width:100%; height:7mm; left:5mm; top:5mm;'>
-<font style='font-size:18px;'>&nbsp;<b>NO.&nbsp;$transno</b><br /></font>	
+<img src='image/ceg.jpg' alt='CEG LOGO' width='80' height='50'>
 </div>
 
 <div style='position:absolute; width:100%; height:7mm; left:150mm; top:5mm;'>
 <font style='font-size:18px;'>&nbsp;<b>BILLING MATERIALS</b><br /></font>	
 </div>
 
-<div style='position:absolute; width:100%; height:7mm; left:0mm; top:8mm; font-size:12px;'>
+<div style='position:absolute; width:100%; height:7mm; left:167mm; top:10mm;'>
+<font style='font-size:18px;'>&nbsp;<b>NO.&nbsp;$transno</b><br /></font>	
+</div>
+
+<div style='position:absolute; width:100%; height:7mm; left:0mm; top:15mm; font-size:12px;'>
 
 <p>
 <hr />
@@ -118,13 +122,13 @@ $header = "<page_header>
 
 </div> 
 
-<div style='position:absolute; width:100%; height:7mm; left:0mm; top:43mm;'>
-<table cellspacing='0' cellpadding='0' border='1' style='font-size:11px;'>
+<div style='position:absolute; width:100%; height:7mm; left:5mm; top:48mm;'>
+<table cellspacing='0' cellpadding='0' border='0' style='font-size:11px;'>
 <tr>
-<th width='100' height='16' valign='middle' align='center' bgcolor='#C0C0C0'>ITEM CODE</th>
-<th width='400' height='16' valign='middle' align='center' bgcolor='#C0C0C0'>ITEM DESCRIPTION</th>
-<th width='100' height='16' valign='middle' align='center' bgcolor='#C0C0C0'>UNIT</th>
-<th width='100' height='16' valign='middle' align='center' bgcolor='#C0C0C0'>QUANTITY</th>
+<th width='100' height='16' valign='middle' align='left'><u>ITEM CODE</u></th>
+<th width='400' height='16' valign='middle' align='left'><u>ITEM DESCRIPTION</u></th>
+<th width='100' height='16' valign='middle' align='left'><u>UNIT</u></th>
+<th width='100' height='16' valign='middle' align='center'><u>QUANTITY</u></th>
 </tr>
 </table>
 </div>        
@@ -137,7 +141,7 @@ $header = "<page_header>
 </page_footer>";
 
 //-- To be printed
-$content = '<page backtop="50mm" backbottom="5mm" backleft="5mm" backright="5mm">' . $header . $disbody . '</page>';
+$content = '<page backtop="52mm" backbottom="5mm" backleft="5mm" backright="5mm">' . $header . $disbody . '</page>';
 
 //-- pdf
 ob_get_clean();

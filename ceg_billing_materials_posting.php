@@ -87,28 +87,30 @@ $rslstbranchname = $DB->resultset();
                                         <div class="card-body">
 
                                             <div class="row">
-                                                <div class="cards mt-3">
-                                                    <div class="cards-body">
-                                                        <div class="responsive-table">
+                                                <div class="col-lg-12 mt-3">
+                                                    <div class="cards">
+                                                        <div class="cards-body">
+                                                            <div class="responsive-table">
 
-                                                            <table class="table table-striped table-sm">
-                                                                <thead class="bg-light text-secondary">
-                                                                    <tr>
-                                                                        <th class="text-left">Transaction No.</th>
-                                                                        <th class="text-left">Transaction Date</th>
-                                                                        <th class="text-left">Project Name</th>
-                                                                        <th class="text-left">Remarks</th>
-                                                                        <th class="text-left">&nbsp;</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="listofitem">
-                                                                
-                                                                </tbody>
-                                                            </table>
+                                                                <table class="table table-striped table-sm">
+                                                                    <thead class="bg-light text-secondary">
+                                                                        <tr>
+                                                                            <th class="text-left">Transaction No.</th>
+                                                                            <th class="text-left">Transaction Date</th>
+                                                                            <th class="text-left">Project Name</th>
+                                                                            <th class="text-left">Remarks</th>
+                                                                            <th class="text-left">&nbsp;</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="listofitem">
+                                                                    
+                                                                    </tbody>
+                                                                </table>
 
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>                                              
+                                                </div>                                               
                                             </div>
                                         
                                         </div>

@@ -17,7 +17,7 @@ $rslstbranchname = $DB->resultset();
 <html lang="en">
 
 <head>
-    <title>Request to Purchase</title>
+    <title>Purchase Order</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
@@ -37,7 +37,7 @@ $rslstbranchname = $DB->resultset();
         <!-- START TITLE -->
         <div class="row mt-2 mb-2">
             <div class="col-lg-12">
-                <h3>Request to Purchase</h3>
+                <h3>Purchase Order</h3>
             </div>
         </div>
         <!-- END TITLE -->
@@ -91,35 +91,33 @@ $rslstbranchname = $DB->resultset();
                                 <div class="col-lg-12">
                                     <div class="card mb-3">
 
-                                        <div class="card-header bg-dark text-light"><i class="fa fa-file"></i> <strong>LIST OF BILLING MATERIALS</strong></div>
+                                        <div class="card-header bg-dark text-light"><i class="fa fa-file"></i> <strong>LIST OF REQUEST TO PURCHASE</strong></div>
 
                                         <div class="card-body">
 
                                             <div class="row">
-                                                <div class="col-lg-12 mt-3">
-                                                    <div class="cards">
-                                                        <div class="cards-body">
-                                                            <div class="responsive-table">
+                                                <div class="cards mt-3">
+                                                    <div class="cards-body">
+                                                        <div class="responsive-table">
 
-                                                                <table class="table table-striped table-sm">
-                                                                    <thead class="bg-light text-secondary">
-                                                                        <tr>
-                                                                            <th class="text-left">Option</th>
-                                                                            <th class="text-left">BM Number</th>
-                                                                            <th class="text-left">BM Date</th>
-                                                                            <th class="text-left">Project Name</th>
-                                                                            <th class="text-left">Remarks</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody id="listofitem">
+                                                            <table class="table table-striped table-sm">
+                                                                <thead class="bg-light text-secondary">
+                                                                    <tr>
+                                                                        <th class="text-center">Option</th>
+                                                                        <th class="text-left">RP Number</th>
+                                                                        <th class="text-left">RP Date</th>
+                                                                        <th class="text-left">Project Name</th>
+                                                                        <th class="text-left">Remarks</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="listofitem">
 
-                                                                    </tbody>
-                                                                </table>
+                                                                </tbody>
+                                                            </table>
 
-                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>                                           
+                                                </div>                                              
                                             </div>
                                         
                                         </div>
@@ -160,52 +158,6 @@ $rslstbranchname = $DB->resultset();
                 var optlbl = $(this).attr("label");
                 if (optval==thisval) { 
                     $("#brcode").val(optlbl); 
-
-                    $.post("ceg_ajax.php", {
-                        "brcode": optlbl,
-                        "proj_id": "",
-                        "trans": "getpostedmateriallist" 
-                        }, function (str) {
-                        //-- load data to list
-                        if (str.length > 0) {
-                            let arrdetails = JSON.parse(str);
-                            let transno = "";
-                            let transdate = "";
-                            let proj_name = "";
-                            let remarks = "";
-
-                            for (let ix = 0; ix < arrdetails.length; ix++) {
-                                transno = arrdetails[ix]["Transno"];
-                                transdate = arrdetails[ix]["Transdate"];
-                                proj_name = arrdetails[ix]["proj_name"];
-                                remarks = arrdetails[ix]["Remarks"];
-
-                                //-- Insert records to array
-                                if ((arr.filter((item) => item.transno == transno)).length <= 0) {
-                                    arr.push({
-                                        "transno": transno,
-                                        "transdate": transdate,
-                                        "proj_name": proj_name,
-                                        "remarks": remarks
-                                    });
-                                }
-                            }
-                            listOfItem();
-                        } else {
-                            $.alert({
-                                title: 'Notice',
-                                icon: 'fa fa-exclamation-triangle',
-                                content: "No Record Found!",
-                                type: 'blue',
-                                theme: "modern",
-                                typeAnimated: true,
-                                buttons: {
-                                    close: function () {}
-                                }
-                            });
-                            return;
-                        }
-                    });
                 }
             });            
         });
