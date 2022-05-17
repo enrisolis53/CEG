@@ -87,6 +87,38 @@ if ($trans == 'getpostedmateriallist') {
     
 }
 
+if ($trans == 'getrequestpurchasedlist') {
+    $arrlist = [];
+    $DB->query('SELECT d.BrLoc, a.RpNumber, a.RpDate, a.proj_id, proj_name, a.Remarks, SUM(Qty-Delivered) AS cnt FROM tbl_RpHead AS a, tbl_RpBody AS b, tbl_proj_profile as c, PIS.dbo.lbBranch AS d WHERE a.brcode=b.BrCode AND a.RpNumber=b.RpNumber AND a.proj_id=c.proj_id AND a.BrCode=d.BrCode AND a.brcode=? AND a.myLocal=? AND posted=? GROUP BY d.BrLoc, a.brcode, a.RpNumber, a.RpDate, a.proj_id, proj_name, a.Remarks ORDER BY  a.RpNumber, a.RpDate');
+    $DB->execute([$brcode, 1, 0]);
+    $rs = $DB->getrow();
+    foreach($rs as $rows){
+        $Branch = trim($rows["BrLoc"]);
+        $Transno = trim($rows["RpNumber"]);
+        $Transdate = trim($rows["RpDate"]);
+        $proj_id = $rows["proj_id"];
+        $proj_name = trim($rows["proj_name"]);
+        $Remarks = trim($rows["Remarks"]);
+        $cnt = is_null($rows["cnt"])?0:intval($rows["cnt"]);
+
+        if($cnt>0){
+            $arrlist[] = array(
+                "Branch"=>$Branch,
+                "Transno"=>$Transno,
+                "Transdate"=>$Transdate,
+                "proj_name"=>utf8_decode($proj_name),
+                "Remarks"=>utf8_decode($Remarks)
+            );
+        }
+    }
+
+    $info = json_encode($arrlist);
+
+    if(count($arrlist) == 0) $info = "";
+    else $info = json_encode($arrlist);
+    
+}
+
 if ($trans == 'getpreviewsdata') {
     $transno = str_pad(strval($_POST["transno"]), 8, "0", STR_PAD_LEFT);
     $arrhead = [];

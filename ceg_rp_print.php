@@ -133,8 +133,8 @@ $disbody .= "</tr></table>";
 //-- Report header
 $header = "<page_header>
 
-<div style='position:absolute; width:100%; height:7mm; left:5mm; top:5mm;'>
-<img src='image/ceg.jpg' alt='CEG LOGO' width='80' height='50'>
+<div style='position:absolute; width:100%; height:7mm; left:8mm; top:-2mm;'>
+<img src='image/ceg_logo.png' alt='CEG LOGO' width='93' height='90'>
 </div>
 
 <div style='position:absolute; width:100%; height:7mm; left:140mm; top:5mm;'>

@@ -9,7 +9,7 @@ echo "<img src='/../images/loader.gif' height='20' width='20' alt='saving' />&nb
 $DB = new classes\Database;
 
 $brcode = trim($_POST["brcode"]);
-$transno = "00000001"; //trim($_POST["transno"]);
+$transno = trim($_POST["transno"]);
 if (empty($transno) || trim($transno) == "") { $trans = "new"; } else { $trans = "edit"; }
 $transdate = $_POST["transdate"];
 $proj_id = $_POST["proj_id"];

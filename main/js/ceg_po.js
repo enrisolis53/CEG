@@ -9,7 +9,8 @@ function listOfItem() {
     if (arr.length > 0) {
         for (let i = 0; i < arr.length; i++) {
             str += "<tr>";
-            str += "<td><button type='button' class='btn btn-link' id='btnSelect' onclick='selectme(\"" + arr[i]["transno"] + "\")' title='Select option number to view billing material details' style='font-size: 14px; margin-top: -7px;'>" + (i+1) + "</i></button></td>";
+            str += "<td><button type='button' class='btn btn-link' id='btnSelect' onclick='selectme(\"" + arr[i]["transno"] + "\")' title='Select option number to view request to purchase details' style='font-size: 14px; margin-top: -7px;'>" + (i+1) + "</i></button></td>";
+            str += "<td>" + arr[i]["branch"] + "</td>";
             str += "<td>" + arr[i]["transno"] + "</td>";
             str += "<td>" + arr[i]["transdate"] + "</td>";
             str += "<td>" + arr[i]["proj_name"] + "</td>";
@@ -57,13 +58,13 @@ function reprint() {
 
     $("#transno").val("");
     clearform();
-    window.open("ceg_rp_print.php?brcode=" + brcode + "&transno=" + transno, "RP PDF", "height=500, width=800, left=10, top=10");
+    window.open("ceg_po_print.php?brcode=" + brcode + "&transno=" + transno, "RP PDF", "height=500, width=800, left=10, top=10");
 }
 
 function selectme(transno) {
     let brcode = $("#brcode").val();
     
-    disform.action = 'ceg_rp.php?brcode='+brcode+'&transno=&bmno='+transno;
+    disform.action = 'ceg_po.php?brcode='+brcode+'&transno=&rpno='+transno;
     disform.submit();
 }
 
@@ -73,10 +74,9 @@ function clearform() {
     listOfItem();
 }
 
-
 function loaddata(arrdata){
     let itemcode, itemdescrip, units = "";
-    let quantity = 0;
+    let quantity, ucost, tcost = 0;
     let arrdetails = JSON.parse(arrdata);
 
     if (arrdata.length > 0) {
@@ -85,21 +85,25 @@ function loaddata(arrdata){
             itemdescrip = arrdetails[i]["descrip"];
             units = arrdetails[i]["uom"];
             quantity = arrdetails[i]["bal"];
+            ucost = arrdetails[i]["ucost"];
+            tcost = arrdetails[i]["tcost"];
 
             if ((arr.filter((item) => item.itemcode == itemcode)).length <= 0) {
                 arr.push({
                     "itemcode": itemcode,
                     "itemdescrip": itemdescrip,
                     "units": units,
-                    "quantity": quantity
+                    "quantity": quantity,
+                    "ucost": ucost,
+                    "tcost": tcost
                 });
             }
         }
     }
-    listRP();
+    listPO();
 }
 
-function listRP(){
+function listPO(){
     let str = "";
     let ctr = 0;
 
@@ -114,7 +118,9 @@ function listRP(){
             str += "<td>" + arr[i]["itemcode"] + "</td>";
             str += "<td>" + arr[i]["itemdescrip"] + "</td>";
             str += "<td align='center'>" + arr[i]["units"] + "</td>";
-            str += "<td align='right'><input type='number' class='form-control' id='quantity' name='quantity' value=\"" + arr[i]["quantity"] +"\" style='text-align: right' maxlength='20 size='20' onchange='updateme(\"" + arr[i]["itemcode"] + "\", this.value);' /></td>";
+            str += "<td align='right'><input type='number' class='form-control' id='quantity' name='quantity' value=\"" + arr[i]["quantity"] +"\" style='text-align: right' maxlength='20 size='20' onchange='updateqty(\"" + arr[i]["itemcode"] + "\", this.value);' /></td>";
+            str += "<td align='right'><input type='number' class='form-control' id='ucost' name='ucost' value=\"" + arr[i]["ucost"] +"\" style='text-align: right' maxlength='20 size='20' onchange='updateucost(\"" + arr[i]["itemcode"] + "\", this.value);' /></td>";
+            str += "<td align='center'>" + arr[i]["tcost"] + "</td>";
             str += "</tr>";
         }
 
@@ -122,13 +128,24 @@ function listRP(){
     }
 }
 
-function updateme(itemcode, val) {
+function updateqty(itemcode, val) {
     for (let i = 0; i < arr.length; i++) {
         if (arr[i]["itemcode"] == itemcode) {
             arr[i]["quantity"]=val;
             break;
         }
     }
+    computeTotalCost();
+}
+
+function updateucost(itemcode, val) {
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i]["itemcode"] == itemcode) {
+            arr[i]["ucost"]=val;
+            break;
+        }
+    }
+    computeTotalCost();
 }
 
 function removeme(itemcode) {
@@ -147,7 +164,7 @@ function removeme(itemcode) {
                         break;
                     }
                 }
-                listRP();
+                listPO();
             },
             close: function () {}
         }
@@ -199,10 +216,31 @@ function validate() {
         typeAnimated: true,
         buttons: {
             yes: function () {
-                disform.action = 'ceg_rp_save.php';
+                disform.action = 'ceg_po_save.php';
                 disform.submit();
             },
             close: function () {}
         }
     });
+}
+
+function computeTotalCost() {
+    let discount = ($("#discount").val()=="")?0:parseFloat($("#discount").val());
+    let downpayment = ($("#downpayment").val()=="")?0:parseFloat($("#downpayment").val());
+    let addpaymentamt = ($("#addpaymentamt").val()=="")?0:parseFloat($("#addpaymentamt").val());
+    let quantity, ucost, tcost, totalpo = 0;
+
+    for (let i = 0; i < arr.length; i++) {
+        quantity = (arr[i]["quantity"]=="")?0:parseFloat(arr[i]["quantity"]);
+        ucost = (arr[i]["ucost"]=="")?0:parseFloat(arr[i]["ucost"]);
+        tcost = parseFloat(quantity*ucost);
+        arr[i]["tcost"]=tcost;
+        totalpo+=tcost;
+    }
+
+    listPO();
+
+    totalpo=parseFloat((totalpo+addpaymentamt)-(discount+downpayment));
+
+    $("#totalpo").val(totalpo);
 }

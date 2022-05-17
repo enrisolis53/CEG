@@ -163,7 +163,6 @@ $rslstbranchname = $DB->resultset();
 
                     $.post("ceg_ajax.php", {
                         "brcode": optlbl,
-                        "proj_id": "",
                         "trans": "getpostedmateriallist" 
                         }, function (str) {
                         //-- load data to list

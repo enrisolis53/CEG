@@ -354,8 +354,9 @@ function validate_posting(n){
 
 function reprint() {
     let brcode = $("#brcode").val();
-    let transno = $("#transno").val();
+    if (brcode.length<=0) return;
 
+    var transno = prompt("Please enter billing materials number"); 
     if (transno.length <= 0) {
         $.alert({
             title: 'No Transaction  Number',
