@@ -86,7 +86,7 @@ $rslstitems = $DB->resultset();
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transno">Transaction Number</label>
-                                        <input type="number" class="form-control" id="transno" name="transno" value="" tabindex="-1" />
+                                        <input type="number" class="form-control" id="transno" name="transno" value="" placeholder="Auto Generated" tabindex="-1" />
                                     </div>
                                 </div>
                                 <div class="col-md-3">

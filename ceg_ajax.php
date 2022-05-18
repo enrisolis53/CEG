@@ -116,7 +116,34 @@ if ($trans == 'getrequestpurchasedlist') {
 
     if(count($arrlist) == 0) $info = "";
     else $info = json_encode($arrlist);
-    
+}
+
+if ($trans == 'getpurchasedorderlist') {
+    $arrlist = [];
+    $DB->query('SELECT c.BrLoc, a.PoNumber, a.PoDate, a.Remarks, SUM(Qty-Delivered) AS cnt FROM tbl_PoHead AS a, tbl_PoBody AS b, PIS.dbo.lbBranch AS c WHERE a.brcode=b.BrCode AND a.RpBrCode=c.BrCode AND a.PoNumber=b.PoNumber AND a.RpBrCode=? AND posted=? GROUP BY c.BrLoc, a.brcode, a.PoNumber, a.PoDate, a.Remarks ORDER BY  a.PoNumber, a.PoDate');
+    $DB->execute([$brcode, 0]);
+    $rs = $DB->getrow();
+    foreach($rs as $rows){
+        $Branch = trim($rows["BrLoc"]);
+        $Transno = trim($rows["PoNumber"]);
+        $Transdate = trim($rows["PoDate"]);
+        $Remarks = trim($rows["Remarks"]);
+        $cnt = is_null($rows["cnt"])?0:intval($rows["cnt"]);
+
+        if($cnt>0){
+            $arrlist[] = array(
+                "Branch"=>$Branch,
+                "Transno"=>$Transno,
+                "Transdate"=>$Transdate,
+                "Remarks"=>utf8_decode($Remarks)
+            );
+        }
+    }
+
+    $info = json_encode($arrlist);
+
+    if(count($arrlist) == 0) $info = "";
+    else $info = json_encode($arrlist);
 }
 
 if ($trans == 'getpreviewsdata') {

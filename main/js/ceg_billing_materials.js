@@ -116,7 +116,7 @@ function getpreviewsdata() {
     let transno = $("#transno").val();
     clearform();
   
-    if (brcode.length <= 0 && transno.length <= 0) return;
+    if (brcode.length <= 0 || transno.length <= 0) return;
 
     $.post(
       "ceg_ajax.php", {

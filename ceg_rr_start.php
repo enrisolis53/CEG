@@ -81,7 +81,6 @@ $rslstbranchname = $DB->resultset();
                                 </div>
                                 <div class="col-md-3 mt-4">
                                     <div class="form-label-group">
-                                        <button type="button" class="btn btn-link" id="btnEdit" onclick="edit()"><i class="fa fa-edit"></i> Edit</button>
                                         <button type="button" class="btn btn-link" id="btnPrint" onclick="reprint()"><i class="fa fa-print"></i> Print</button>
                                     </div>
                                 </div>
@@ -105,9 +104,9 @@ $rslstbranchname = $DB->resultset();
                                                                     <thead class="bg-light text-secondary">
                                                                         <tr>
                                                                             <th class="text-left">Option</th>
+                                                                            <th class="text-left">Branch</th>
                                                                             <th class="text-left">PO Number</th>
                                                                             <th class="text-left">PO Date</th>
-                                                                            <th class="text-left">Project Name</th>
                                                                             <th class="text-left">Remarks</th>
                                                                         </tr>
                                                                     </thead>
@@ -146,7 +145,7 @@ $rslstbranchname = $DB->resultset();
     <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
     <script src="vendor/jquery/jquery-confirm.js"></script>
     <script src="vendor/datepicker/dpicker.js"></script>
-    <script text="text/javascript" src="main/js/ceg_rp.js"></script>
+    <script text="text/javascript" src="main/js/ceg_rr.js"></script>
     <script text="text/javascript" src="main/js/menu.js"></script>
     <script type='text/javascript'>
     $(function() {
@@ -163,28 +162,28 @@ $rslstbranchname = $DB->resultset();
 
                     $.post("ceg_ajax.php", {
                         "brcode": optlbl,
-                        "trans": "getpostedmateriallist" 
+                        "trans": "getpurchasedorderlist" 
                         }, function (str) {
                         //-- load data to list
                         if (str.length > 0) {
                             let arrdetails = JSON.parse(str);
+                            let branch = "";
                             let transno = "";
                             let transdate = "";
-                            let proj_name = "";
                             let remarks = "";
 
                             for (let ix = 0; ix < arrdetails.length; ix++) {
+                                branch = arrdetails[ix]["Branch"];
                                 transno = arrdetails[ix]["Transno"];
                                 transdate = arrdetails[ix]["Transdate"];
-                                proj_name = arrdetails[ix]["proj_name"];
                                 remarks = arrdetails[ix]["Remarks"];
 
                                 //-- Insert records to array
                                 if ((arr.filter((item) => item.transno == transno)).length <= 0) {
                                     arr.push({
+                                        "branch": branch,
                                         "transno": transno,
                                         "transdate": transdate,
-                                        "proj_name": proj_name,
                                         "remarks": remarks
                                     });
                                 }

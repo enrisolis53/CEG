@@ -8,7 +8,7 @@ $mybrcode = $_SESSION["ceg_brcode"];
 $position = $_SESSION['positn'];
 $brcode = $_GET["brcode"];
 $transno = $_GET["transno"];
-$rpno = $_GET["rpno"];
+$pono = $_GET["pono"];
 
 $DB = new classes\Database;
 
@@ -22,8 +22,8 @@ $DB->query('SELECT DISTINCT brcode, brloc FROM lib_access_accounts WHERE empid=?
 $DB->execute([$empid]);
 $rslstbranchname = $DB->resultset();
 
-$DB->query("SELECT b.ItemCode, descrip, UOM, (Qty-Delivered) as bal FROM tbl_RpHead AS a, tbl_RpBody AS b, lib_items AS c WHERE (a.BrCode=b.BrCode AND a.RpNumber=b.RpNumber AND b.ItemCode=c.itemcode) AND a.brcode=? AND a.RpNumber=?");
-$DB->execute([$brcode, $rpno]);
+$DB->query("SELECT a.BrCode, a.CpdNumber, a.RpNumber, a.Supplier, a.discount, a.downpayment, a.add_payment_type, a.add_payment_amt, b.ItemCode, descrip, UOM, (Qty-Delivered) as bal, UnitCost, TotalCost FROM tbl_PoHead AS a, tbl_PoBody AS b, lib_items AS c WHERE (a.BrCode=b.BrCode AND a.PoNumber=b.PoNumber AND b.ItemCode=c.itemcode) AND a.RpBrCode=? AND a.PoNumber=?");
+$DB->execute([$brcode, $pono]);
 $rs = $DB->resultset();
 
 $DB->query('SELECT itemcode, descrip, buum, brum FROM lib_items ORDER BY descrip');
@@ -34,17 +34,23 @@ $DB->query("SELECT (RTRIM(Fname)+' '+LEFT(Mname,1)+' '+RTRIM(Lname)) AS cname, E
 $DB->execute([]);
 $rslstemp = $DB->resultset();
 
-$DB->query("SELECT RegName FROM TFINANCE.dbo.tTaxPayer WHERE Individual=? AND status=? ORDER BY RegName"); 
-$DB->execute([0, 0]);
-$rslsttaxpayer = $DB->resultset();
-
 $arr = [];
 
 foreach ($rs as $row) {
-    $itemcode = utf8_decode(trim($row->ItemCode));
+    $PoBrCode = trim($row->BrCode);
+    $cpdno = trim($row->CpdNumber);
+    $rpno = trim($row->RpNumber);
+    $supplier = utf8_decode(trim($row->Supplier));
+    $discount = floatval($row->discount);
+    $downpayment = floatval($row->downpayment);
+    $addpayment = trim($row->add_payment_type);
+    $addpaymentamt = floatval($row->add_payment_amt);
+    $itemcode = trim($row->ItemCode);
     $descrip = utf8_decode(trim($row->descrip));
     $uom = utf8_decode(trim($row->UOM));
     $bal = floatval($row->bal);
+    $ucost = floatval($row->UnitCost);
+    $tcost = floatval($row->TotalCost);
 
     if($bal>0){
         $arr[] = array(
@@ -52,8 +58,9 @@ foreach ($rs as $row) {
             "descrip"=>$descrip, 
             "uom"=>$uom, 						
             "bal"=>$bal,
-            "ucost"=>"",
-            "tcost"=>""
+            "ucost"=>$ucost,
+            "icost"=>"",
+            "tcost"=>$tcost
         );
     }  
 }
@@ -63,7 +70,7 @@ foreach ($rs as $row) {
 <html lang="en">
 
 <head>
-    <title>Purchase Order</title>
+    <title>Receiving Report</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="vendor/bootstrap/css/bootstrap.min.css">
@@ -83,7 +90,7 @@ foreach ($rs as $row) {
         <!-- START TITLE -->
         <div class="row mt-2 mb-2">
             <div class="col-lg-12">
-                <h3>Purchase Order</h3>
+                <h3>Receiving Report</h3>
             </div>
         </div>
         <!-- END TITLE -->
@@ -95,6 +102,7 @@ foreach ($rs as $row) {
                     <div class="card-body">
 
                         <form name="disform" id="disform" method="POST">
+                        <input type="hidden" id="pobrcode" name="pobrcode" value="<?php echo $PoBrCode; ?>" />
                         <input type="hidden" id="transdata" name="transdata" value="" />
                             
                             <div class="row">
@@ -114,7 +122,7 @@ foreach ($rs as $row) {
                                 <div class="col-md-3">
                                     <div class="form-label-group">
                                         <label for="transno">Transaction Number</label>
-                                        <input type="number" class="form-control" id="transno" name="transno" value="<?php echo $transno; ?>" placeholder="Auto Generated" tabindex="-1" readonly />
+                                        <input type="number" class="form-control" id="transno" name="transno" value="" placeholder="Auto Generated" tabindex="-1" readonly />
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -134,57 +142,83 @@ foreach ($rs as $row) {
 
                                         <div class="card-body">
 
-                                            <div class="row">
+                                            <div class="row">    
                                                 <div class="col-md-6">
                                                     <div class="form-label-group">
-                                                        <label for="deliverto">Deliver To</label>
-                                                        <input list="lstbranch" class="form-control req" id="deliverto" name="deliverto" value="<?php echo $deliverto; ?>" />
-                                                        <datalist id="lstbranch">
-                                                        <?php
-                                                        foreach ($rslstbranchname as $row){
-                                                            $xbrcode = trim($row->brcode);
-                                                            $xbrloc = trim($row->brloc);
-                                                            echo "<option value='$xbrloc' label='$xbrcode'></option>";
-                                                        }
-                                                        ?>
-                                                        </datalist>
+                                                        <label for="supplier">Supplier</label>
+                                                        <input text="text" class="form-control req" id="supplier" name="supplier" value="<?php echo $supplier; ?>" tabindex="-1" readonly />
                                                     </div>
                                                 </div>
                                                 <div class="col-md-3">
+                                                    <div class="form-label-group">
+                                                        <label for="drno">Delivery Receipt Number</label>
+                                                        <input type="text" class="form-control" id="drno" name="drno" value="" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-label-group">
+                                                        <label for="sino">Sales Invoice Number</label>
+                                                        <input type="text" class="form-control" id="sino" name="sino" value="" />
+                                                    </div>
+                                                </div>
+                                            </div>     
+                                            
+                                            <div class="row">
+                                                <div class="col-md-3 mt-2">
                                                     <div class="form-label-group">
                                                         <label for="rpno">Request To Purchase Number</label>
                                                         <input type="text" class="form-control req" id="rpno" name="rpno" placeholder="" value="<?php echo $rpno; ?>" tabindex="-1" readonly />
                                                     </div>
                                                 </div>
-                                                <div class="col-md-3">
+                                                <div class="col-md-3 mt-2">
                                                     <div class="form-label-group">
+                                                        <label for="pono">Purchase Order Number</label>
+                                                        <input text="text" class="form-control req" id="pono" name="pono" placeholder="" value="<?php echo $pono; ?>" tabindex="-1" readonly />
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 mt-2">
+                                                <div class="form-label-group">
                                                         <label for="cpdno">Central Purchasing Number</label>
-                                                        <input type="number" class="form-control" id="cpdno" name="cpdno" placeholder="" value="<?php echo $cpdno; ?>" />
+                                                        <input type="number" class="form-control" id="cpdno" name="cpdno" placeholder="" value="<?php echo $cpdno; ?>" tabindex="-1" readonly />
                                                     </div>
-                                                </div>  
+                                                </div>
                                             </div>
-
-                                            <div class="row">    
-                                                <div class="col-md-6 mt-2">
-                                                    <div class="form-label-group">
-                                                        <label for="supplier">Supplier</label>
-                                                        <input list="lstsupplier" class="form-control req" id="supplier" name="supplier" value="<?php echo $supplier; ?>" />
-                                                        <datalist id="lstsupplier"></datalist>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-3 mt-2">
-                                                    <div class="form-label-group">
-                                                        <label for="contno">Contact Details</label>
-                                                        <input type="text" class="form-control req" id="contno" name="contno" value="<?php echo $contno; ?>" />
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-3 mt-2">
-                                                    <div class="form-label-group">
-                                                        <label for="terms">Terms</label>
-                                                        <input type="text" class="form-control req" id="terms" name="terms" value="<?php echo $terms; ?>" />
-                                                    </div>
-                                                </div>
-                                            </div>                                        
+                                            
+                                            <div class="row">
+                                                <?php 
+                                                if($discount!=""){
+                                                    echo '
+                                                    <div class="col-md-3 mt-2">
+                                                        <div class="form-label-group">
+                                                        <label for="discount">Discount</label>
+                                                        <input type="number" class="form-control" id="discount" name="discount" value="'.$discount.'" tabindex="-1" readonly style="text-align:right;" />
+                                                        </div>
+                                                    </div>';
+                                                } 
+                                                ?>
+                                                <?php 
+                                                if($downpayment!=""){
+                                                    echo '
+                                                    <div class="col-md-3 mt-2">
+                                                        <div class="form-label-group">
+                                                        <label for="downpayment">Down Payment</label>
+                                                        <input type="number" class="form-control" id="downpayment" name="downpayment" value="'.$downpayment.'" tabindex="-1" readonly style="text-align:right;"  />
+                                                        </div>
+                                                    </div>';
+                                                } 
+                                                ?>
+                                                <?php 
+                                                if($addpayment!=""){
+                                                    echo '
+                                                    <div class="col-md-3 mt-2">
+                                                        <div class="form-label-group">
+                                                            <label for="addpaymentamt">'.$addpayment.'</label>
+                                                            <input type="number" class="form-control" id="addpaymentamt" name="addpaymentamt" value="'.$addpaymentamt.'" tabindex="-1" readonly style="text-align:right;" />
+                                                        </div>
+                                                    </div>';
+                                                } 
+                                                ?>
+                                            </div>
 
                                             <div class="row">
                                                 <div class="col-lg-12 mt-2">
@@ -210,6 +244,7 @@ foreach ($rs as $row) {
                                                                             <th class="text-center">Units</th>
                                                                             <th class="text-center">Quantity</th>
                                                                             <th class="text-center">Unit Cost</th>
+                                                                            <th class="text-center">Incidental Cost</th>
                                                                             <th class="text-center">Total Cost</th>
                                                                         </tr>
                                                                     </thead>
@@ -225,40 +260,10 @@ foreach ($rs as $row) {
                                             </div>
 
                                             <div class="row">
-                                                <div class="col-md-2 mt-2">
+                                                <div class="col-md-2 offset-lg-10 mt-2">
                                                     <div class="form-label-group">
-                                                        <label for="discount">Discount</label>
-                                                        <input type="number" class="form-control" id="discount" name="discount" value="<?php echo $discount; ?>" style="text-align:right;" />
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-2 mt-2">
-                                                    <div class="form-label-group">
-                                                        <label for="downpayment">Down Payment</label>
-                                                        <input type="number" class="form-control" id="downpayment" name="downpayment" value="<?php echo $downpayment; ?>" style="text-align:right;" />
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4 mt-2">
-                                                    <div class="form-label-group">
-                                                        <label for="addpayment">Add Payment Option</label>
-                                                        <Select class="form-control" id="addpayment" name="addpayment" value="<?php echo $addpayment; ?>">
-                                                        <option value=""> -- </option>
-                                                        <option value="Delivery Charge">Delivery Charge</option>
-                                                        <option value="Installation Fee">Installation Fee</option>
-                                                        <option value="Sercice Charge">Service Charge</option>
-                                                        <option value="Other Charges">Other Charges</option>
-                                                        </Select>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-2 mt-2">
-                                                    <div class="form-label-group">
-                                                        <label for="addpaymentamt">Add Payment Amount</label>
-                                                        <input type="number" class="form-control" id="addpaymentamt" name="addpaymentamt" value="<?php echo $addpaymentamt; ?>" readonly style="text-align:right;" />
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-2 mt-2">
-                                                    <div class="form-label-group">
-                                                        <label for="totalpo">Total Amount</label>
-                                                        <input type="number" class="form-control" id="totalpo" name="totalpo" value="<?php echo $totalpo; ?>" tabindex="-1" readonly style="text-align:right;" />
+                                                        <label for="totalrr">Total Amount</label>
+                                                        <input type="number" class="form-control" id="totalrr" name="totalrr" value="<?php echo $totalrr; ?>" tabindex="-1" readonly style="text-align:right;" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -274,9 +279,9 @@ foreach ($rs as $row) {
                                             <div class="row">
                                                 <div class="col-lg-4">
                                                     <div class="form-label-group">
-                                                        <label for="prepby">Prepared By</label>
-                                                        <input list="lstempname" class="form-control req" id="prepby" name="prepby" value="<?php echo strtoupper($username); ?>" readonly tabindex='-1' />
-                                                        <input type="text" class="form-control" id="prepbypos" name="prepbypos" value="<?php echo strtoupper($position); ?>" readonly readonly tabindex='-1' />
+                                                        <label for="receivedby">Received By</label>
+                                                        <input list="lstempname" class="form-control req" id="receivedby" name="receivedby" value="<?php echo strtoupper($username); ?>" readonly tabindex='-1' />
+                                                        <input type="text" class="form-control" id="receivedbypos" name="receivedbypos" value="<?php echo strtoupper($position); ?>" readonly readonly tabindex='-1' />
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-4">
@@ -285,14 +290,6 @@ foreach ($rs as $row) {
                                                         <input list="lstnotedby" class="form-control req" id="notedby" name="notedby" value="" />
                                                         <input type="text" class="form-control" id="notedbypos" name="notedbypos" value="" readonly readonly tabindex='-1' />
                                                         <datalist id="lstnotedby"></datalist>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <div class="form-label-group">
-                                                        <label for="approvedby">Approved By</label>
-                                                        <input list="lstapprovedby" class="form-control req" id="approvedby" name="approvedby" value="" />
-                                                        <input type="text" class="form-control" id="approvebypos" name="approvebypos" value="" readonly readonly tabindex='-1' />
-                                                        <datalist id="lstapprovedby"></datalist>
                                                     </div>
                                                 </div>
                                             </div>
@@ -379,15 +376,6 @@ foreach ($rs as $row) {
 
     <?php include('menu-end.php'); ?>
 
-    <datalist id="lsttaxpayer">
-    <?php
-    foreach ($rslsttaxpayer as $row){
-        $RegName = utf8_decode(strtoupper(trim($row->RegName)));
-        echo "<option value='$RegName'></option>";
-    }
-    ?>
-    </datalist>
-
     <datalist id="lstempname">
     <?php
     foreach ($rslstemp as $row){
@@ -416,7 +404,7 @@ foreach ($rs as $row) {
     <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
     <script src="vendor/jquery/jquery-confirm.js"></script>
     <!-- <script src="vendor/datepicker/dpicker.js"></script> -->
-    <script text="text/javascript" src="main/js/ceg_po.js"></script>
+    <script text="text/javascript" src="main/js/ceg_rr.js"></script>
     <script text="text/javascript" src="main/js/menu.js"></script>
     <script type='text/javascript'>
 
@@ -488,37 +476,6 @@ foreach ($rs as $row) {
                 if (optval==thisval) { 
                     $("#notedby").val(optval);
                     $("#notedbypos").val(optlbl);
-                }
-            });            
-        });
-
-        $("#approvedby").keyup(function(e) {
-            var discnt = 0;
-            var disval = $(this).val().toUpperCase();
-            var dislen = disval.length;
-            $('#lstapprovedby').html('');
-            $('#lstempname option').each(function (i, e) {
-                var optval = $(this).val().toUpperCase().substr(0, dislen);
-                if (disval == optval) {
-                    if (discnt == 10) {
-                        Debug.Break();
-                    }
-                    $('#lstapprovedby').append('<option value=\"' + $(this).val() + '\" label=\"' + $(this).attr('label') + '\">');
-                    discnt++;
-                }
-            });
-        });
-
-        $("#approvedby").blur(function(e) {
-            var thisval = ($(this).val()).toUpperCase();
-            $("#approvebypos").val("");
-
-            $('#lstapprovedby option').each(function(i,e) {
-                var optval = ($(this).val()).toUpperCase();
-                var optlbl = $(this).attr("label");
-                if (optval==thisval) { 
-                    $("#approvedby").val(optval);
-                    $("#approvebypos").val(optlbl);
                 }
             });            
         });

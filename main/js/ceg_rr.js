@@ -9,11 +9,10 @@ function listOfItem() {
     if (arr.length > 0) {
         for (let i = 0; i < arr.length; i++) {
             str += "<tr>";
-            str += "<td><button type='button' class='btn btn-link' id='btnSelect' onclick='selectme(\"" + arr[i]["transno"] + "\")' title='Select option number to view request to purchase details' style='font-size: 14px; margin-top: -7px;'>" + (i+1) + "</i></button></td>";
+            str += "<td><button type='button' class='btn btn-link' id='btnSelect' onclick='selectme(\"" + arr[i]["transno"] + "\")' title='Select option number to view purchased order details' style='font-size: 14px; margin-top: -7px;'>" + (i+1) + "</i></button></td>";
             str += "<td>" + arr[i]["branch"] + "</td>";
             str += "<td>" + arr[i]["transno"] + "</td>";
             str += "<td>" + arr[i]["transdate"] + "</td>";
-            str += "<td>" + arr[i]["proj_name"] + "</td>";
             str += "<td>" + arr[i]["remarks"] + "</td>";
             str += "</tr>";
         }
@@ -58,13 +57,13 @@ function reprint() {
 
     $("#transno").val("");
     clearform();
-    window.open("ceg_po_print.php?brcode=" + brcode + "&transno=" + transno, "RP PDF", "height=500, width=800, left=10, top=10");
+    window.open("ceg_rr_print.php?brcode=" + brcode + "&transno=" + transno, "RR PDF", "height=500, width=800, left=10, top=10");
 }
 
 function selectme(transno) {
     let brcode = $("#brcode").val();
     
-    disform.action = 'ceg_po.php?brcode='+brcode+'&transno=&rpno='+transno;
+    disform.action = 'ceg_rr.php?brcode='+brcode+'&transno=&pono='+transno;
     disform.submit();
 }
 
@@ -75,8 +74,11 @@ function clearform() {
 }
 
 function loaddata(arrdata){
-    let itemcode, itemdescrip, units = "";
-    let quantity, ucost, tcost = 0;
+    let discount = ($("#discount").val() == undefined)?0:parseFloat($("#discount").val());
+    let downpayment = ($("#downpayment").val() == undefined)?0:parseFloat($("#downpayment").val());
+    let addpaymentamt = ($("#addpaymentamt").val() == undefined)?0:parseFloat($("#addpaymentamt").val());
+    let itemcode = itemdescrip = units = "";
+    let quantity = ucost = tcost = tqty = 0;
     let arrdetails = JSON.parse(arrdata);
 
     if (arrdata.length > 0) {
@@ -86,6 +88,7 @@ function loaddata(arrdata){
             units = arrdetails[i]["uom"];
             quantity = arrdetails[i]["bal"];
             ucost = arrdetails[i]["ucost"];
+            icost = arrdetails[i]["icost"];
             tcost = arrdetails[i]["tcost"];
 
             if ((arr.filter((item) => item.itemcode == itemcode)).length <= 0) {
@@ -95,20 +98,27 @@ function loaddata(arrdata){
                     "units": units,
                     "quantity": quantity,
                     "ucost": ucost,
+                    "icost": icost,
                     "tcost": tcost
                 });
+
+                tqty+=quantity;
+            }
+        }
+
+        if(discount!=0 || downpayment!=0 || addpaymentamt!=0){
+            for (let i = 0; i < arr.length; i++) {
+                arr[i]["icost"] = parseFloat((addpaymentamt-(discount+downpayment))/tqty).toFixed(2);
             }
         }
     }
-    listPO();
+
+    computeTotalCost();
 }
 
-function listPO(){
-    let discount = ($("#discount").val()=="")?0:parseFloat($("#discount").val());
-    let downpayment = ($("#downpayment").val()=="")?0:parseFloat($("#downpayment").val());
-    let addpaymentamt = ($("#addpaymentamt").val()=="")?0:parseFloat($("#addpaymentamt").val());
+function listRR(){
     let str = "";
-    let ctr = totalpo = 0;
+    let ctr = ticost = totalrr = 0;
 
     $("#listofitem").html("");
 
@@ -122,17 +132,18 @@ function listPO(){
             str += "<td>" + arr[i]["itemdescrip"] + "</td>";
             str += "<td align='center'>" + arr[i]["units"] + "</td>";
             str += "<td align='right'><input type='number' class='form-control' id='quantity' name='quantity' value=\"" + arr[i]["quantity"] +"\" style='text-align: right' maxlength='20 size='20' onchange='updateqty(\"" + arr[i]["itemcode"] + "\", this.value);' /></td>";
-            str += "<td align='right'><input type='number' class='form-control' id='ucost' name='ucost' value=\"" + arr[i]["ucost"] +"\" style='text-align: right' maxlength='20 size='20' onchange='updateucost(\"" + arr[i]["itemcode"] + "\", this.value);' /></td>";
+            // str += "<td align='right'><input type='number' class='form-control' id='ucost' name='ucost' value=\"" + arr[i]["ucost"] +"\" style='text-align: right' maxlength='20 size='20' onchange='updateucost(\"" + arr[i]["itemcode"] + "\", this.value);' /></td>";
+            str += "<td align='center'>" + arr[i]["ucost"] + "</td>";
+            str += "<td align='right'><input type='number' class='form-control' id='icost' name='icost' value=\"" + arr[i]["icost"] +"\" style='text-align: right' maxlength='20 size='20' onchange='updateicost(\"" + arr[i]["itemcode"] + "\", this.value);' /></td>";
             str += "<td align='center'>" + arr[i]["tcost"] + "</td>";
             str += "</tr>";
 
-            totalpo+=parseFloat(arr[i]["tcost"]);
+            totalrr+=parseFloat(arr[i]["tcost"]);
         }
 
         $("#listofitem").html(str);
 
-        totalpo=parseFloat((totalpo+addpaymentamt)-(discount+downpayment));
-        $("#totalpo").val(totalpo);
+        $("#totalrr").val(totalrr);
     }
 }
 
@@ -156,6 +167,16 @@ function updateucost(itemcode, val) {
     computeTotalCost();
 }
 
+function updateicost(itemcode, val) {
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i]["itemcode"] == itemcode) {
+            arr[i]["icost"]=val;
+            break;
+        }
+    }
+    computeTotalCost();
+}
+
 function removeme(itemcode) {
     $.confirm({
         title: 'Confirmation',
@@ -172,7 +193,7 @@ function removeme(itemcode) {
                         break;
                     }
                 }
-                listPO();
+                listRR();
             },
             close: function () {}
         }
@@ -224,7 +245,7 @@ function validate() {
         typeAnimated: true,
         buttons: {
             yes: function () {
-                disform.action = 'ceg_po_save.php';
+                disform.action = 'ceg_rr_save.php';
                 disform.submit();
             },
             close: function () {}
@@ -233,15 +254,15 @@ function validate() {
 }
 
 function computeTotalCost() {
-    let quantity, ucost, tcost = 0;
+    let quantity = ucost = icost = tcost = 0;
 
     for (let i = 0; i < arr.length; i++) {
         quantity = (arr[i]["quantity"]=="")?0:parseFloat(arr[i]["quantity"]);
         ucost = (arr[i]["ucost"]=="")?0:parseFloat(arr[i]["ucost"]);
-        tcost = parseFloat(quantity*ucost);
+        icost = (arr[i]["icost"]=="")?0:parseFloat(arr[i]["icost"]);
+        tcost = parseFloat((ucost+icost)*quantity).toFixed(2);
         arr[i]["tcost"]=tcost;
-        totalpo+=tcost;
     }
 
-    listPO();
+    listRR();
 }
