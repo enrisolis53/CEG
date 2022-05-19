@@ -58,6 +58,29 @@ foreach ($arrs as $row) {
 
     $DB->query("UPDATE tbl_PoBody SET Delivered=$newQty WHERE BrCode=? AND PoNumber=? AND ItemCode=?");
     $DB->execute([$brcode, $pono, $itemcode]);
+
+    //-- tStockLedger
+    $DB->query("SELECT TOP (1) EndBal FROM tbl_StockLedger WHERE brcode = ? AND ItemCode = ? ORDER BY Uniqueid DESC");
+    $DB->execute([$brcode, $itemcode]);
+    $rsEndBal = $DB->getrow();
+    $EndBal = (!isset($rsEndBal[0]["EndBal"])) ? 0 :floatval($rsEndBal[0]["EndBal"]);
+    $stockQty = floatval($quantity+$EndBal);
+
+    $DB->query("INSERT INTO tbl_StockLedger (brcode, itemcode, refnumber, transdate, transtype, unitprice, begbal, qty, endbal) VALUES ('$brcode', '$itemcode', '$transno', '$transdate', 'RECEIVED', $ucost, $EndBal, $quantity, $stockQty)");
+    $DB->execute([]);
+}
+
+$DB->query("SELECT COUNT(DISTINCT(PoNumber)) AS Po from tbl_PoBody WHERE BrCode=? AND PoNumber=? AND (Delivered=0 OR (Delivered<Qty AND Delivered!>Qty))");
+$DB->execute([$pobrcode, $pono]);
+$rsRemaining = $DB->getrow();
+$Remaining = (!isset($rsRemaining[0]["Rp"])) ? 0 :intval($rsRemaining[0]["Rp"]);
+
+if ($Remaining == 0) {
+    $DB->query("UPDATE tbl_PoHead SET Posted=1 WHERE BrCode=? AND PoNumber=?");
+    $DB->execute([$pobrcode, $pono]);
+} else {
+    $DB->query("UPDATE tbl_PoHead SET Posted=0 WHERE BrCode=? AND PoNumber=?");
+    $DB->execute([$pobrcode, $pono]);
 }
 
 echo "<script type='text/javascript'>window.open('ceg_rr_print.php?brcode=$brcode&transno=$transno', 'Receiving Report', 'height=550, width=700');</script>";

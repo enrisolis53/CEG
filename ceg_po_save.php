@@ -13,13 +13,13 @@ $brcode = trim($_POST["brcode"]);
 $transno = trim($_POST["transno"]);
 if (empty($transno) || trim($transno) == "") { $trans = "new"; } else { $trans = "edit"; }
 $transdate = $_POST["transdate"];
-$deliverto = utf8_decode(trim($_POST["deliverto"]));
-$rpno = trim($_POST["rpno"]);
-$cpdno = trim($_POST["cpdno"]);
-$supplier = utf8_decode(trim($_POST["supplier"]));
-$contno = utf8_decode(trim($_POST["contno"]));
-$terms = utf8_decode(trim($_POST["terms"]));
-$remarks = utf8_decode(trim($_POST["remarks"]));
+$deliverto = !isset($_POST["deliverto"])?"":utf8_decode(trim($_POST["deliverto"]));
+$rpno = !isset($_POST["rpno"])?"":trim($_POST["rpno"]);
+$cpdno = !isset($_POST["cpdno"])?"":trim($_POST["cpdno"]);
+$supplier = !isset($_POST["supplier"])?"":utf8_decode(trim($_POST["supplier"]));
+$contno = !isset($_POST["contno"])?"":utf8_decode(trim($_POST["contno"]));
+$terms = !isset($_POST["terms"])?"":utf8_decode(trim($_POST["terms"]));
+$remarks = !isset($_POST["remarks"])?"":utf8_decode(trim($_POST["remarks"]));
 
 $supplierArr = explode("[", $supplier);
 $tin = str_replace("]", "", $supplierArr[1]);
@@ -79,6 +79,19 @@ foreach ($arrs as $row) {
 
     $DB->query("UPDATE tbl_RpBody SET Delivered=$newQty WHERE BrCode=? AND RpNumber=? AND ItemCode=?");
     $DB->execute([$brcode, $rpno, $itemcode]);
+}
+
+$DB->query("SELECT COUNT(DISTINCT(RpNumber)) AS Rp from tbl_RpBody WHERE BrCode=? AND RpNumber=? AND (Delivered=0 OR (Delivered<Qty AND Delivered!>Qty))");
+$DB->execute([$brcode, $rpno]);
+$rsRemaining = $DB->getrow();
+$Remaining = (!isset($rsRemaining[0]["Rp"])) ? 0 :intval($rsRemaining[0]["Rp"]);
+
+if ($Remaining == 0) {
+    $DB->query("UPDATE tbl_RpHead SET Posted=1 WHERE BrCode=? AND RpNumber=?");
+    $DB->execute([$brcode, $rpno]);
+} else {
+    $DB->query("UPDATE tbl_RpHead SET Posted=0 WHERE BrCode=? AND RpNumber=?");
+    $DB->execute([$brcode, $rpno]);
 }
 
 echo "<script type='text/javascript'>window.open('ceg_po_print.php?brcode=$brcode&transno=$transno', 'Purchase Order', 'height=550, width=700');</script>";

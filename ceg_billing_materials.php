@@ -287,6 +287,8 @@ $rslstitems = $DB->resultset();
 
         $("#branchname").blur(function(e) {
             clearform();
+            document.getElementById('lstprojname').innerHTML = "";
+            document.getElementById('lstprojname1').innerHTML = "";
             $("#brcode").val(""); 	
             var thisval = ($(this).val()).toUpperCase();
             

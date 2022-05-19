@@ -13,18 +13,18 @@ $transno = trim($_POST["transno"]);
 if (empty($transno) || trim($transno) == "") { $trans = "new"; } else { $trans = "edit"; }
 $transdate = $_POST["transdate"];
 $proj_id = $_POST["proj_id"];
-$bmno = trim($_POST["bmno"]);
-$remarks = utf8_decode(trim($_POST["remarks"]));
-$prepby = utf8_decode(strtoupper(trim($_POST["prepby"])));
-$prepbypos = utf8_decode(strtoupper(trim($_POST["prepbypos"])));
-$notedby = utf8_decode(strtoupper(trim($_POST["notedby"])));
-$notedbypos = utf8_decode(strtoupper(trim($_POST["notedbypos"])));
-$checkedby = utf8_decode(strtoupper(trim($_POST["checkedby"])));
-$checkedbypos = utf8_decode(strtoupper(trim($_POST["checkedbypos"])));
-$recommendby = utf8_decode(strtoupper(trim($_POST["recommendby"])));
-$recommendbypos = utf8_decode(strtoupper(trim($_POST["recommendbypos"])));
-$approvedby = utf8_decode(strtoupper(trim($_POST["approvedby"])));
-$approvedbypos = utf8_decode(strtoupper(trim($_POST["approvebypos"])));
+$bmno = !isset($_POST["bmno"])?"":trim($_POST["bmno"]);
+$remarks = !isset($_POST["remarks"])?"":utf8_decode(trim($_POST["remarks"]));
+$prepby = !isset($_POST["prepby"])?"":utf8_decode(strtoupper(trim($_POST["prepby"])));
+$prepbypos = !isset($_POST["prepbypos"])?"":utf8_decode(strtoupper(trim($_POST["prepbypos"])));
+$notedby = !isset($_POST["notedby"])?"":utf8_decode(strtoupper(trim($_POST["notedby"])));
+$notedbypos = !isset($_POST["notedbypos"])?"":utf8_decode(strtoupper(trim($_POST["notedbypos"])));
+$checkedby = !isset($_POST["checkedby"])?"":utf8_decode(strtoupper(trim($_POST["checkedby"])));
+$checkedpos = !isset($_POST["checkedbypos"])?"":utf8_decode(strtoupper(trim($_POST["checkedbypos"])));
+$recommendby = !isset($_POST["recommendby"])?"":utf8_decode(strtoupper(trim($_POST["recommendby"])));
+$recommendbypos = !isset($_POST["recommendbypos"])?"":utf8_decode(strtoupper(trim($_POST["recommendbypos"])));
+$approvedby = !isset($_POST["approvedby"])?"":utf8_decode(strtoupper(trim($_POST["approvedby"])));
+$approvedbypos = !isset($_POST["approvebypos"])?"":utf8_decode(strtoupper(trim($_POST["approvebypos"])));
 
 $arrs = json_decode($_POST["transdata"], true);
 
@@ -40,10 +40,10 @@ if ($trans == "new") {
     $rsmax = $DB->getrow();
     $transno = str_pad(strval($rsmax[0]["maxno"]+1), 8, "0", STR_PAD_LEFT);
 
-    $DB->query("INSERT INTO tbl_RpHead (BrCode, RpNumber, RpDate, Proj_Id, BmNo, Remarks, Preparedpos, Preparedpos, Checkedby, Checkedpos, Notedby, Notedbypos, RecAppby, RecApppos, Approvedby, Approvedpos, Lastupdate) VALUES ('$brcode','$transno','$transdate',$proj_id,'$bmno','$remarks','$prepby','$prepbypos','$checkedby','$checkedbypos','$notedby','$notedbypos','$recommendby','$recommendbypos','$approvedby','$approvedbypos','$encoded')");
+    $DB->query("INSERT INTO tbl_RpHead (BrCode, RpNumber, RpDate, Proj_Id, BmNo, Remarks, Preparedby, Preparedpos, Checkedby, Checkedpos, Notedby, Notedbypos, RecAppby, RecApppos, Approvedby, Approvedpos, Lastupdate) VALUES ('$brcode','$transno','$transdate',$proj_id,'$bmno','$remarks','$prepby','$prepbypos','$checkedby','$checkedpos','$notedby','$notedbypos','$recommendby','$recommendbypos','$approvedby','$approvedbypos','$encoded')");
     $DB->execute([]);
 } else {
-    $DB->query("UPDATE tbl_RpHead SET Remarks='$remarks', Preparedby='$prepby', Preparedpos='$prepbypos', Notedby='$notedby', Notedbypos='$notedbypos', Checkedby='$Checkedby', Checkedpos='$checkedbypos', RecAppby='$recommendby', RecApppos='$recommendbypos', Approvedby='$approvedby', Approvedpos='$approvedbypos', Lastupdate='$encoded'  WHERE BrCode=? AND RpNumber=?");
+    $DB->query("UPDATE tbl_RpHead SET Remarks='$remarks', Preparedby='$prepby', Preparedpos='$prepbypos', Notedby='$notedby', Notedbypos='$notedbypos', Checkedby='$checkedby', Checkedpos='$checkedpos', RecAppby='$recommendby', RecApppos='$recommendbypos', Approvedby='$approvedby', Approvedpos='$approvedbypos', Lastupdate='$encoded'  WHERE BrCode=? AND RpNumber=?");
     $DB->execute([$brcode, $transno]);
 }
 

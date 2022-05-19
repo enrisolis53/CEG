@@ -21,6 +21,14 @@ function listOfItem() {
     }
 }
 
+function edit() {
+    let brcode = $("#brcode").val();
+    let transno = $("#transno").val();
+
+    disform.action = 'ceg_rp.php?brcode='+brcode+'&transno='+transno+'&bmno=';
+    disform.submit();
+}
+
 function reprint() {
     let brcode = $("#brcode").val();
     let transno = $("#transno").val();

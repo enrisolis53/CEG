@@ -176,7 +176,7 @@ $header = "<page_header>
 </tr>
 
 <tr>
-<td width=100>&nbsp;Supplier</td><td width=10>:</td><td width=400>$Supplier</td>
+<td width=100>&nbsp;Supplier</td><td width=10>:</td><td width=1000>$Supplier</td>
 </tr>
 
 <tr>

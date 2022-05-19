@@ -160,7 +160,7 @@ $rslstbranchname = $DB->resultset();
                 var optval = ($(this).val()).toUpperCase();
                 var optlbl = $(this).attr("label");
                 if (optval==thisval) { 
-                    $("#brcode").val(optlbl); 
+                    $("#brcode").val(optlbl);
 
                     $.post("ceg_ajax.php", {
                         "brcode": optlbl,

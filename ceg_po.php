@@ -5,9 +5,10 @@ include('classes/Database.class.php');
 
 $empid = $_SESSION['ceg_empid'];
 $mybrcode = $_SESSION["ceg_brcode"];
-$position = $_SESSION['positn'];
+$preparedby = $username;
+$preparedpos = $_SESSION['positn'];
 $brcode = $_GET["brcode"];
-$transno = $_GET["transno"];
+$transno = str_pad(strval($_GET["transno"]), 8, "0", STR_PAD_LEFT);
 $rpno = $_GET["rpno"];
 
 $DB = new classes\Database;
@@ -40,22 +41,63 @@ $rslsttaxpayer = $DB->resultset();
 
 $arr = [];
 
-foreach ($rs as $row) {
-    $itemcode = utf8_decode(trim($row->ItemCode));
-    $descrip = utf8_decode(trim($row->descrip));
-    $uom = utf8_decode(trim($row->UOM));
-    $bal = floatval($row->bal);
+if(isset($_GET["transno"])){
+    $DB->query("SELECT a.PoDate, a.CpdNumber, a.RpNumber, a.DeliverTo, a.Supplier, a.ContDetails, a.Terms, a.Remarks, a.discount, a.downpayment, a.add_payment_type, a.add_payment_amt, a.Preparedby, a.Preparedpos, a.Notedby, a.Notedbypos, a.Approvedby, a.Approvedpos, b.ItemCode, descrip, UOM, Qty, UnitCost, TotalCost FROM tbl_PoHead AS a, tbl_PoBody AS b, lib_items AS c WHERE (a.BrCode=b.BrCode AND a.PoNumber=b.PoNumber AND b.ItemCode=c.itemcode) AND a.brcode=? AND a.PoNumber=?");    $DB->execute([$brcode, $transno]);
+    $rs = $DB->resultset();
 
-    if($bal>0){
+    foreach ($rs as $row) {
+        $transdate = date("Y-m-d", strtotime($row->PoDate));
+        $cpdno = trim($row->CpdNumber);
+        $rpno = utf8_decode(trim($row->RpNumber));
+        $deliverto = utf8_decode(trim($row->DeliverTo));
+        $supplier = utf8_decode(trim($row->Supplier));
+        $contno = utf8_decode(trim($row->ContDetails));
+        $terms = utf8_decode(trim($row->Terms));
+        $remarks = utf8_decode(trim($row->Remarks));
+        $discount = floatval($row->discount);
+        $downpayment = floatval($row->downpayment);
+        $addpayment = trim($row->add_payment_type);
+        $addpaymentamt = floatval($row->add_payment_amt);
+        $preparedby = utf8_decode(trim($row->Preparedby));
+        $preparedpos = utf8_decode(trim($row->Preparedpos));
+        $Notedby = utf8_decode(trim($row->Notedby));
+        $Notedbypos = utf8_decode(trim($row->Notedbypos));
+        $Approvedby = utf8_decode(trim($row->Approvedby));
+        $Approvedpos = utf8_decode(trim($row->Approvedpos));
+        $itemcode = utf8_decode(trim($row->ItemCode));
+        $descrip = utf8_decode(trim($row->descrip));
+        $uom = utf8_decode(trim($row->UOM));
+        $qty = floatval($row->Qty);
+        $UnitCost = floatval($row->UnitCost);
+        $TotalCost = floatval($row->TotalCost);
+
         $arr[] = array(
             "itemcode"=>$itemcode,
             "descrip"=>$descrip, 
             "uom"=>$uom, 						
-            "bal"=>$bal,
-            "ucost"=>"",
-            "tcost"=>""
-        );
-    }  
+            "bal"=>$qty,
+            "ucost"=>$UnitCost,
+            "tcost"=>$TotalCost
+        );  
+    }
+} else {
+    foreach ($rs as $row) {
+        $itemcode = utf8_decode(trim($row->ItemCode));
+        $descrip = utf8_decode(trim($row->descrip));
+        $uom = utf8_decode(trim($row->UOM));
+        $bal = floatval($row->bal);
+
+        if($bal>0){
+            $arr[] = array(
+                "itemcode"=>$itemcode,
+                "descrip"=>$descrip, 
+                "uom"=>$uom, 						
+                "bal"=>$bal,
+                "ucost"=>"",
+                "tcost"=>""
+            );
+        }  
+    }
 }
 
 ?>
@@ -242,10 +284,10 @@ foreach ($rs as $row) {
                                                         <label for="addpayment">Add Payment Option</label>
                                                         <Select class="form-control" id="addpayment" name="addpayment" value="<?php echo $addpayment; ?>">
                                                         <option value=""> -- </option>
-                                                        <option value="Delivery Charge">Delivery Charge</option>
-                                                        <option value="Installation Fee">Installation Fee</option>
-                                                        <option value="Sercice Charge">Service Charge</option>
-                                                        <option value="Other Charges">Other Charges</option>
+                                                        <option value="Delivery Charge" <?php if($addpayment=="Delivery Charge") echo "selected"; ?> >Delivery Charge</option>
+                                                        <option value="Installation Fee" <?php if($addpayment=="Installation Fee") echo "selected"; ?> >Installation Fee</option>
+                                                        <option value="Sercice Charge" <?php if($addpayment=="Sercice Charge") echo "selected"; ?> >Service Charge</option>
+                                                        <option value="Other Charges" <?php if($addpayment=="Other Charges") echo "selected"; ?> >Other Charges</option>
                                                         </Select>
                                                     </div>
                                                 </div>
@@ -275,23 +317,23 @@ foreach ($rs as $row) {
                                                 <div class="col-lg-4">
                                                     <div class="form-label-group">
                                                         <label for="prepby">Prepared By</label>
-                                                        <input list="lstempname" class="form-control req" id="prepby" name="prepby" value="<?php echo strtoupper($username); ?>" readonly tabindex='-1' />
-                                                        <input type="text" class="form-control" id="prepbypos" name="prepbypos" value="<?php echo strtoupper($position); ?>" readonly readonly tabindex='-1' />
+                                                        <input list="lstempname" class="form-control req" id="prepby" name="prepby" value="<?php echo strtoupper($preparedby); ?>" readonly tabindex='-1' />
+                                                        <input type="text" class="form-control" id="prepbypos" name="prepbypos" value="<?php echo strtoupper($preparedpos); ?>" readonly readonly tabindex='-1' />
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-4">
                                                     <div class="form-label-group">
                                                         <label for="notedby">Noted by</label> <!-- <label for="notedby">Noted by</label> -->
-                                                        <input list="lstnotedby" class="form-control req" id="notedby" name="notedby" value="" />
-                                                        <input type="text" class="form-control" id="notedbypos" name="notedbypos" value="" readonly readonly tabindex='-1' />
+                                                        <input list="lstnotedby" class="form-control req" id="notedby" name="notedby" value="<?php echo strtoupper($Notedby); ?>" />
+                                                        <input type="text" class="form-control" id="notedbypos" name="notedbypos" value="<?php echo strtoupper($Notedbypos); ?>" readonly readonly tabindex='-1' />
                                                         <datalist id="lstnotedby"></datalist>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-4">
                                                     <div class="form-label-group">
                                                         <label for="approvedby">Approved By</label>
-                                                        <input list="lstapprovedby" class="form-control req" id="approvedby" name="approvedby" value="" />
-                                                        <input type="text" class="form-control" id="approvebypos" name="approvebypos" value="" readonly readonly tabindex='-1' />
+                                                        <input list="lstapprovedby" class="form-control req" id="approvedby" name="approvedby" value="<?php echo strtoupper($Approvedby); ?>" />
+                                                        <input type="text" class="form-control" id="approvebypos" name="approvebypos" value="<?php echo strtoupper($Approvedpos); ?>" readonly readonly tabindex='-1' />
                                                         <datalist id="lstapprovedby"></datalist>
                                                     </div>
                                                 </div>

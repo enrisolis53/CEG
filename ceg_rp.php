@@ -5,9 +5,10 @@ include('classes/Database.class.php');
 
 $empid = $_SESSION['ceg_empid'];
 $mybrcode = $_SESSION["ceg_brcode"];
-$position = $_SESSION['positn'];
+$preparedby = $username;
+$preparedpos = $_SESSION['positn'];
 $brcode = $_GET["brcode"];
-$transno = $_GET["transno"];
+$transno = str_pad(strval($_GET["transno"]), 8, "0", STR_PAD_LEFT);
 $bmno = $_GET["bmno"];
 
 $DB = new classes\Database;
@@ -32,23 +33,58 @@ $rslstemp = $DB->resultset();
 
 $arr = [];
 
-foreach ($rs as $row) {
-    $proj_name = utf8_decode(trim($row->proj_name));
-    $proj_id = $row->proj_id;
-    $remarks = utf8_decode(trim($row->Remarks));
-    $itemcode = utf8_decode(trim($row->ItemCode));
-    $descrip = utf8_decode(trim($row->descrip));
-    $uom = utf8_decode(trim($row->UOM));
-    $bal = floatval($row->bal);
+if(isset($_GET["transno"])){
+    $DB->query("SELECT a.RpDate, a.proj_id, d.proj_name, a.BmNo, a.Remarks, a.Preparedby, a.Preparedpos, a.Checkedby, a.Checkedpos, a.Notedby, a.Notedbypos, a.RecAppby, a.RecApppos, a.Approvedby, a.Approvedpos, b.ItemCode, descrip, UOM, Qty FROM tbl_RpHead AS a, tbl_RpBody AS b, lib_items AS c, tbl_proj_profile AS d WHERE (a.BrCode=b.BrCode AND a.RpNumber=b.RpNumber AND b.ItemCode=c.itemcode AND a.proj_id=d.proj_id) AND a.brcode=? AND a.RpNumber=?");
+    $DB->execute([$brcode, $transno]);
+    $rs = $DB->resultset();
 
-    if($bal>0){
+    foreach ($rs as $row) {
+        $transdate = $row->RpDate;
+        $proj_id = utf8_decode(trim($row->proj_id));
+        $proj_name = utf8_decode(trim($row->proj_name));
+        $bmno = utf8_decode(trim($row->BmNo));
+        $remarks = utf8_decode(trim($row->Remarks));
+        $preparedby = utf8_decode(trim($row->Preparedby));
+        $preparedpos = utf8_decode(trim($row->Preparedpos));
+        $Checkedby = utf8_decode(trim($row->Checkedby));
+        $Checkedpos = utf8_decode(trim($row->Checkedpos));
+        $Notedby = utf8_decode(trim($row->Notedby));
+        $Notedbypos = utf8_decode(trim($row->Notedbypos));
+        $RecAppby = utf8_decode(trim($row->RecAppby));
+        $RecApppos = utf8_decode(trim($row->RecApppos));
+        $Approvedby = utf8_decode(trim($row->Approvedby));
+        $Approvedpos = utf8_decode(trim($row->Approvedpos));
+        $itemcode = utf8_decode(trim($row->ItemCode));
+        $descrip = utf8_decode(trim($row->descrip));
+        $uom = utf8_decode(trim($row->UOM));
+        $qty = floatval($row->Qty);
+
         $arr[] = array(
             "itemcode"=>$itemcode,
             "descrip"=>$descrip, 
             "uom"=>$uom, 						
-            "bal"=>$bal
-        );
-    }  
+            "bal"=>$qty
+        );  
+    }
+} else {
+    foreach ($rs as $row) {
+        $proj_name = utf8_decode(trim($row->proj_name));
+        $proj_id = $row->proj_id;
+        $remarks = utf8_decode(trim($row->Remarks));
+        $itemcode = utf8_decode(trim($row->ItemCode));
+        $descrip = utf8_decode(trim($row->descrip));
+        $uom = utf8_decode(trim($row->UOM));
+        $bal = floatval($row->bal);
+    
+        if($bal>0){
+            $arr[] = array(
+                "itemcode"=>$itemcode,
+                "descrip"=>$descrip, 
+                "uom"=>$uom, 						
+                "bal"=>$bal
+            );
+        }  
+    }
 }
 
 ?>
@@ -198,45 +234,45 @@ foreach ($rs as $row) {
                                                 <div class="col-lg-4">
                                                     <div class="form-label-group">
                                                         <label for="prepby">Prepared By</label>
-                                                        <input list="lstempname" class="form-control req" id="prepby" name="prepby" value="<?php echo strtoupper($username); ?>" readonly tabindex='-1' />
-                                                        <input type="text" class="form-control" id="prepbypos" name="prepbypos" value="<?php echo strtoupper($position); ?>" readonly readonly tabindex='-1' />
+                                                        <input list="lstempname" class="form-control req" id="prepby" name="prepby" value="<?php echo strtoupper($preparedby); ?>" readonly tabindex='-1' />
+                                                        <input type="text" class="form-control" id="prepbypos" name="prepbypos" value="<?php echo strtoupper($preparedpos); ?>" readonly readonly tabindex='-1' />
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-4">
                                                     <div class="form-label-group">
                                                         <label for="notedby">Requested by</label> <!-- <label for="notedby">Noted by</label> -->
-                                                        <input list="lstnotedby" class="form-control req" id="notedby" name="notedby" value="" />
-                                                        <input type="text" class="form-control" id="notedbypos" name="notedbypos" value="" readonly readonly tabindex='-1' />
+                                                        <input list="lstnotedby" class="form-control req" id="notedby" name="notedby" value="<?php echo strtoupper($Notedby); ?>" />
+                                                        <input type="text" class="form-control" id="notedbypos" name="notedbypos" value="<?php echo strtoupper($Notedbypos); ?>" readonly readonly tabindex='-1' />
                                                         <datalist id="lstnotedby"></datalist>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-4">
                                                     <div class="form-label-group">
-                                                        <label for="checkedbypos">Checked & Verified by</label>
-                                                        <input list="lstcheckedby" class="form-control" id="checkedby" name="checkedby" value="" />
-                                                        <input type="text" class="form-control" id="checkedbypos" name="checkedbypos" value="" readonly readonly tabindex='-1' />
+                                                        <label for="checkedby">Checked & Verified by</label>
+                                                        <input list="lstcheckedby" class="form-control" id="checkedby" name="checkedby" value="<?php echo strtoupper($Checkedby); ?>" />
+                                                        <input type="text" class="form-control" id="checkedbypos" name="checkedbypos" value="<?php echo strtoupper($Checkedpos); ?>" readonly readonly tabindex='-1' />
                                                         <datalist id="lstcheckedby"></datalist>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="row">
-                                                <div class="col-lg-4">
+                                                <div class="col-lg-4 mt-2">
                                                     <div class="form-label-group">
                                                         <label for="recommendby">Recommending Approval</label>
-                                                        <input list="lstrecommendby" class="form-control req" id="recommendby" name="recommendby" value="" />
-                                                        <input type="text" class="form-control" id="recommendbypos" name="recommendbypos" value="" readonly readonly tabindex='-1' />
+                                                        <input list="lstrecommendby" class="form-control req" id="recommendby" name="recommendby" value="<?php echo strtoupper($RecAppby); ?>" />
+                                                        <input type="text" class="form-control" id="recommendbypos" name="recommendbypos" value="<?php echo strtoupper($RecApppos); ?>" readonly readonly tabindex='-1' />
                                                         <datalist id="lstrecommendby"></datalist>
                                                     </div>
                                                 </div>
-                                                <div class="col-lg-4">
+                                                <div class="col-lg-4 mt-2">
                                                     <div class="form-label-group">
                                                         <label for="approvedby">Approved By</label>
-                                                        <input list="lstapprovedby" class="form-control req" id="approvedby" name="approvedby" value="" />
-                                                        <input type="text" class="form-control" id="approvebypos" name="approvebypos" value="" readonly readonly tabindex='-1' />
+                                                        <input list="lstapprovedby" class="form-control req" id="approvedby" name="approvedby" value="<?php echo strtoupper($Approvedby); ?>" />
+                                                        <input type="text" class="form-control" id="approvebypos" name="approvebypos" value="<?php echo strtoupper($Approvedpos); ?>" readonly readonly tabindex='-1' />
                                                         <datalist id="lstapprovedby"></datalist>
                                                     </div>
                                                 </div>
-                                                <div class="col-lg-4">
+                                                <div class="col-lg-4 mt-2">
                                                     &nbsp;
                                                 </div>
                                             </div>
